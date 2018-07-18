@@ -1,0 +1,3 @@
+[submodule "tai_ac400/oopt-tai"]
+	path = tai_ac400/oopt-tai
+	url = https://github.com/Telecominfraproject/oopt-tai.git
