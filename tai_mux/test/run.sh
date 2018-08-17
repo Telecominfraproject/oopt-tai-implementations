@@ -1,0 +1,3 @@
+#!/bin/sh
+
+LD_LIBRARY_PATH=. TAI_MUX_PLATFORM_ADAPTER=static TAI_MUX_STATIC_CONFIG_FILE=./static.json $1 ./test 
