@@ -42,7 +42,7 @@ class ModuleAdapter {
             _In_ uint32_t                   attr_count,
             _In_ const tai_attribute_t     *attr_list,
             _In_ tai_module_notification_t *notifications) {
-            if ( m_module_api == nullptr && m_module_api->create_module == nullptr ) {
+            if ( m_module_api == nullptr || m_module_api->create_module == nullptr ) {
                 return TAI_STATUS_FAILURE;
             }
             return m_module_api->create_module(module_id, attr_count, attr_list, notifications);
@@ -50,7 +50,7 @@ class ModuleAdapter {
 
         tai_status_t remove_module(
             _In_ tai_object_id_t module_id) {
-            if ( m_module_api == nullptr && m_module_api->remove_module == nullptr ) {
+            if ( m_module_api == nullptr || m_module_api->remove_module == nullptr ) {
                 return TAI_STATUS_FAILURE;
             }
             return m_module_api->remove_module(module_id);
@@ -60,7 +60,7 @@ class ModuleAdapter {
             _In_ tai_object_id_t module_id,
             _In_ uint32_t attr_count,
             _In_ const tai_attribute_t *attr_list) {
-            if ( m_module_api == nullptr && m_module_api->set_module_attributes == nullptr ) {
+            if ( m_module_api == nullptr || m_module_api->set_module_attributes == nullptr ) {
                 return TAI_STATUS_FAILURE;
             }
             return m_module_api->set_module_attributes(module_id, attr_count, attr_list);
@@ -70,7 +70,7 @@ class ModuleAdapter {
             _In_ tai_object_id_t module_id,
             _In_ uint32_t attr_count,
             _In_ tai_attribute_t *attr_list) {
-            if ( m_module_api == nullptr && m_module_api->get_module_attributes == nullptr ) {
+            if ( m_module_api == nullptr || m_module_api->get_module_attributes == nullptr ) {
                 return TAI_STATUS_FAILURE;
             }
             return m_module_api->get_module_attributes(module_id, attr_count, attr_list);
@@ -81,7 +81,7 @@ class ModuleAdapter {
             _In_ tai_object_id_t module_id,
             _In_ uint32_t attr_count,
             _In_ const tai_attribute_t *attr_list) {
-            if ( m_netif_api == nullptr && m_netif_api->create_network_interface == nullptr ) {
+            if ( m_netif_api == nullptr || m_netif_api->create_network_interface == nullptr ) {
                 return TAI_STATUS_FAILURE;
             }
             return m_netif_api->create_network_interface(network_interface_id, module_id, attr_count, attr_list);
@@ -89,7 +89,7 @@ class ModuleAdapter {
 
         tai_status_t remove_network_interface(
             _In_ tai_object_id_t network_interface_id) {
-            if ( m_netif_api == nullptr && m_netif_api->remove_network_interface == nullptr ) {
+            if ( m_netif_api == nullptr || m_netif_api->remove_network_interface == nullptr ) {
                 return TAI_STATUS_FAILURE;
             }
             return m_netif_api->remove_network_interface(network_interface_id);
@@ -99,7 +99,7 @@ class ModuleAdapter {
             _In_ tai_object_id_t network_interface_id,
             _In_ uint32_t attr_count,
             _In_ const tai_attribute_t *attr_list) {
-            if ( m_netif_api == nullptr && m_netif_api->set_network_interface_attributes == nullptr ) {
+            if ( m_netif_api == nullptr || m_netif_api->set_network_interface_attributes == nullptr ) {
                 return TAI_STATUS_FAILURE;
             }
             return m_netif_api->set_network_interface_attributes(network_interface_id, attr_count, attr_list);
@@ -109,7 +109,7 @@ class ModuleAdapter {
             _In_ tai_object_id_t network_interface_id,
             _In_ uint32_t attr_count,
             _In_ tai_attribute_t *attr_list) {
-            if ( m_netif_api == nullptr && m_netif_api->get_network_interface_attributes == nullptr ) {
+            if ( m_netif_api == nullptr || m_netif_api->get_network_interface_attributes == nullptr ) {
                 return TAI_STATUS_FAILURE;
             }
             return m_netif_api->get_network_interface_attributes(network_interface_id, attr_count, attr_list);
@@ -120,7 +120,7 @@ class ModuleAdapter {
             _In_ tai_object_id_t module_id,
             _In_ uint32_t attr_count,
             _In_ const tai_attribute_t *attr_list) {
-            if ( m_hostif_api == nullptr && m_hostif_api->create_host_interface == nullptr ) {
+            if ( m_hostif_api == nullptr || m_hostif_api->create_host_interface == nullptr ) {
                 return TAI_STATUS_FAILURE;
             }
             return m_hostif_api->create_host_interface(host_interface_id, module_id, attr_count, attr_list);
@@ -128,7 +128,7 @@ class ModuleAdapter {
 
         tai_status_t remove_host_interface(
             _In_ tai_object_id_t host_interface_id) {
-            if ( m_hostif_api == nullptr && m_hostif_api->remove_host_interface == nullptr ) {
+            if ( m_hostif_api == nullptr || m_hostif_api->remove_host_interface == nullptr ) {
                 return TAI_STATUS_FAILURE;
             }
             return m_hostif_api->remove_host_interface(host_interface_id);
@@ -138,7 +138,7 @@ class ModuleAdapter {
             _In_ tai_object_id_t host_interface_id,
             _In_ uint32_t attr_count,
             _In_ const tai_attribute_t *attr_list) {
-            if ( m_hostif_api == nullptr && m_hostif_api->set_host_interface_attributes == nullptr ) {
+            if ( m_hostif_api == nullptr || m_hostif_api->set_host_interface_attributes == nullptr ) {
                 return TAI_STATUS_FAILURE;
             }
             return m_hostif_api->set_host_interface_attributes(host_interface_id, attr_count, attr_list);
@@ -148,7 +148,7 @@ class ModuleAdapter {
             _In_ tai_object_id_t host_interface_id,
             _In_ uint32_t attr_count,
             _In_ tai_attribute_t *attr_list) {
-            if ( m_hostif_api == nullptr && m_hostif_api->get_host_interface_attributes == nullptr ) {
+            if ( m_hostif_api == nullptr || m_hostif_api->get_host_interface_attributes == nullptr ) {
                 return TAI_STATUS_FAILURE;
             }
             return m_hostif_api->get_host_interface_attributes(host_interface_id, attr_count, attr_list);
