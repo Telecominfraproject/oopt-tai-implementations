@@ -1,7 +1,12 @@
 #include "static_platform_adapter.hpp"
 
 StaticPlatformAdapter::StaticPlatformAdapter(uint64_t flags, const tai_service_method_table_t* services) {
-    auto config_file = std::string(std::getenv(TAI_MUX_STATIC_CONFIG_FILE.c_str()));
+    std::string config_file = TAI_MUX_STATIC_DEFAULT_CONFIG;
+    auto e = std::getenv(TAI_MUX_STATIC_CONFIG_FILE.c_str());
+    if ( e != nullptr ) {
+        config_file = e;
+    }
+
     std::ifstream ifs(config_file);
     if ( !ifs ) {
         return;

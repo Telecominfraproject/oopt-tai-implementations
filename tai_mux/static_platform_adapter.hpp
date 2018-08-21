@@ -15,6 +15,7 @@
 using json = nlohmann::json;
 
 const std::string TAI_MUX_STATIC_CONFIG_FILE = "TAI_MUX_STATIC_CONFIG_FILE";
+const std::string TAI_MUX_STATIC_DEFAULT_CONFIG = "/etc/tai/mux/static.json";
 
 class StaticPlatformAdapter : public PlatformAdapter {
     public:
