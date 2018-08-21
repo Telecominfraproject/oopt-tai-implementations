@@ -14,6 +14,7 @@ README.md file in each subdirectory for more information about the component and
 build instructions. The repo currently contains the following components:
 
 * tai_ac400 - The TAI adapter code for the Acacia AC400 module
+* tai_mux - A TAI adapter which multiplexes access to multiple, possible different, TAI adapters.
 
 For more information about:
 * TAI: https://github.com/Telecominfraproject/oopt-tai
