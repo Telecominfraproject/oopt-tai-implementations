@@ -3,6 +3,7 @@
 #include <map>
 #include <exception>
 #include <sstream>
+#include <iostream>
 
 #define LOAD_TAI_API(name)                            \
     m_ ## name = (name ## _fn) dlsym(m_dl, #name);    \
@@ -19,6 +20,8 @@ ModuleAdapter::ModuleAdapter(const std::string& name, uint64_t flags, const tai_
     LOAD_TAI_API(tai_api_uninitialize)
     LOAD_TAI_API(tai_api_query)
     LOAD_TAI_API(tai_log_set)
+    LOAD_TAI_API(tai_object_type_query)
+    LOAD_TAI_API(tai_module_id_query)
 
     std::stringstream ss;
 

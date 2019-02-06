@@ -56,8 +56,7 @@ class Multiplexier {
         tai_status_t create_module(
                 _Out_ tai_object_id_t *module_id,
                 _In_ uint32_t attr_count,
-                _In_ const tai_attribute_t *attr_list,
-                _In_ tai_module_notification_t *notifications);
+                _In_ const tai_attribute_t *attr_list);
 
         tai_status_t remove_module(
                 _In_ tai_object_id_t module_id);
@@ -109,6 +108,9 @@ class Multiplexier {
                 _In_ tai_object_id_t        host_interface_id,
                 _In_ uint32_t               attr_count,
                 _Out_ tai_attribute_t *attr_list);
+
+        tai_object_type_t object_type_query(
+                _In_ tai_object_id_t id);
 
     private:
         Multiplexier(const Multiplexier&){}

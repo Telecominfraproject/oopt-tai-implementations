@@ -18,6 +18,8 @@ StaticPlatformAdapter::StaticPlatformAdapter(uint64_t flags, const tai_service_m
     std::map<uint64_t, ModuleAdapter*> map;
     auto c = json::parse(config);
 
+    m_services.module_presence = nullptr;
+
     for ( json::iterator it = c.begin(); it != c.end(); ++it ) {
         auto location = it.key();
         auto lib = it.value().get<std::string>();

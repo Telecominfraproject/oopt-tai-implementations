@@ -18,8 +18,6 @@ tai_module_api_t *module_api;
 tai_network_interface_api_t *netif_api;
 tai_host_interface_api_t *hostif_api;
 
-tai_module_notification_t notification = {0};
-
 int fd;
 std::queue<std::pair<bool, std::string>> q;
 std::mutex m;
@@ -67,12 +65,12 @@ int module::create_netif(uint32_t num) {
 
         list.clear();
 
-        attr.id = TAI_NETWORK_INTERFACE_ATTR_TX_ENABLE;
-        attr.value.booldata = true;
+        attr.id = TAI_NETWORK_INTERFACE_ATTR_TX_DIS;
+        attr.value.booldata = false;
         list.push_back(attr);
 
-        attr.id = TAI_NETWORK_INTERFACE_ATTR_TX_CHANNEL;
-        attr.value.u16 = 10;
+        attr.id = TAI_NETWORK_INTERFACE_ATTR_TX_LASER_FREQ;
+        attr.value.u64 = 191300000000000;
         list.push_back(attr);
 
         attr.id = TAI_NETWORK_INTERFACE_ATTR_TX_GRID_SPACING;
@@ -125,7 +123,7 @@ tai_status_t create_module(const std::string& location, tai_object_id_t& m_id) {
     attr.value.charlist.count = location.size();
     attr.value.charlist.list = (char*)location.c_str();
     list.push_back(attr);
-    return module_api->create_module(&m_id, list.size(), list.data(), &notification);
+    return module_api->create_module(&m_id, list.size(), list.data());
 }
 
 int main() {

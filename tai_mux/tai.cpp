@@ -1,5 +1,6 @@
 #include "mux.hpp"
 #include <cstdlib>
+#include <iostream>
 
 extern Multiplexier *g_mux;
 
@@ -148,10 +149,9 @@ tai_network_interface_api_t mux_network_interface_api = {
 static tai_status_t mux_create_module(
     _Out_ tai_object_id_t          *module_id,
     _In_ uint32_t                   attr_count,
-    _In_ const tai_attribute_t     *attr_list,
-    _In_ tai_module_notification_t *notifications)
+    _In_ const tai_attribute_t     *attr_list)
 {
-    return g_mux->create_module(module_id, attr_count, attr_list, notifications);
+    return g_mux->create_module(module_id, attr_count, attr_list);
 }
 
 static tai_status_t mux_remove_module(_In_ tai_object_id_t module_id)
@@ -222,4 +222,8 @@ tai_status_t tai_api_query(_In_ tai_api_t tai_api_id,
 
 tai_status_t tai_log_set(tai_api_t tai_api_id, tai_log_level_t log_level) {
     return TAI_STATUS_SUCCESS;
+}
+
+tai_object_type_t tai_object_type_query(tai_object_id_t id) {
+    return g_mux->object_type_query(id);
 }
