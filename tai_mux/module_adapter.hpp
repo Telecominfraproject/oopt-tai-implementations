@@ -40,12 +40,11 @@ class ModuleAdapter {
         tai_status_t create_module(
             _Out_ tai_object_id_t          *module_id,
             _In_ uint32_t                   attr_count,
-            _In_ const tai_attribute_t     *attr_list,
-            _In_ tai_module_notification_t *notifications) {
+            _In_ const tai_attribute_t     *attr_list) {
             if ( m_module_api == nullptr || m_module_api->create_module == nullptr ) {
                 return TAI_STATUS_FAILURE;
             }
-            return m_module_api->create_module(module_id, attr_count, attr_list, notifications);
+            return m_module_api->create_module(module_id, attr_count, attr_list);
         }
 
         tai_status_t remove_module(

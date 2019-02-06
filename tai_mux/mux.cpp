@@ -1,4 +1,5 @@
 #include "mux.hpp"
+#include <iostream>
 
 Multiplexier *g_mux;
 
@@ -175,8 +176,7 @@ tai_status_t Multiplexier::get_network_interface_attributes(_In_ tai_object_id_t
 tai_status_t Multiplexier::create_module(
     _Out_ tai_object_id_t          *module_id,
     _In_ uint32_t                   attr_count,
-    _In_ const tai_attribute_t     *attr_list,
-    _In_ tai_module_notification_t *notifications) {
+    _In_ const tai_attribute_t     *attr_list) {
     if ( g_mux == nullptr ) {
         return TAI_STATUS_UNINITIALIZED;
     }
@@ -195,7 +195,7 @@ tai_status_t Multiplexier::create_module(
 
     tai_object_id_t id;
 
-    auto ret = m_adapter->create_module(&id, attr_count, attr_list, notifications);
+    auto ret = m_adapter->create_module(&id, attr_count, attr_list);
     if ( ret != TAI_STATUS_SUCCESS ) {
         return ret;
     }
@@ -260,10 +260,24 @@ tai_status_t Multiplexier::get_module_attributes(_In_ tai_object_id_t module_id,
     return m_adapter->get_module_attributes(id, attr_count, attr_list);
 }
 
+tai_object_type_t Multiplexier::object_type_query(_In_ tai_object_id_t id) {
+    tai_object_id_t realid;
+    ModuleAdapter *m_adapter;
+    if ( g_mux == nullptr ) {
+        return TAI_OBJECT_TYPE_NULL;
+    }
+
+    if ( g_mux->get_mapping(id, &m_adapter, &realid) != 0 ) {
+        return TAI_OBJECT_TYPE_NULL;
+    }
+    return m_adapter->tai_object_type_query(realid);
+}
+
 Multiplexier* create_mux(platform_adapter_t pa_kind, uint64_t flags, const tai_service_method_table_t* services) {
     try {
         return new Multiplexier(pa_kind, flags, services);
-    } catch (...) {
+    } catch (const std::runtime_error& e) {
+        std::cerr << e.what() << std::endl;
         return nullptr;
     }
 }
