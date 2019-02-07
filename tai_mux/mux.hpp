@@ -13,7 +13,8 @@
 class OIDAllocator {
     public:
         tai_object_id_t next() {
-            for (int i = 0; i < 256; i++) {
+            // TAI_NULL_OBJECT_ID == 0, start from i = 1
+            for (int i = 1; i < 256; i++) {
                 if ( !m_bitset.test(i) ) {
                     m_bitset.set(i);
                     return tai_object_id_t(i);
