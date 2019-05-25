@@ -120,15 +120,31 @@ class Multiplexier {
         std::map<tai_object_id_t, std::pair<tai_object_id_t, ModuleAdapter* >> m_map;
         OIDAllocator m_oid_allocator;
 
+        tai_status_t set_attributes( std::function<tai_status_t(ModuleAdapter*, tai_object_id_t, uint32_t, const tai_attribute_t*)> f, tai_object_id_t oid, uint32_t attr_count, const tai_attribute_t *attr_list);
+        tai_status_t get_attributes( std::function<tai_status_t(ModuleAdapter*, tai_object_id_t, uint32_t, tai_attribute_t*)> f, tai_object_id_t oid, uint32_t attr_count, tai_attribute_t *attr_list);
+
         int get_mapping(const tai_object_id_t& id, ModuleAdapter **adapter, tai_object_id_t *real_id) {
             if ( m_map.find(id) == m_map.end() ) {
                 return -1;
             }
             auto pair = m_map[id];
-            *adapter = pair.second;
-            *real_id = pair.first;
+            if ( adapter != nullptr ) {
+                *adapter = pair.second;
+            }
+            if ( real_id != nullptr ) {
+                *real_id = pair.first;
+            }
             return 0;
         };
+
+        tai_object_id_t get_reverse_mapping(const tai_object_id_t real_id, ModuleAdapter *adapter) {
+            for ( auto p : m_map ) {
+                if ( p.second.first == real_id && p.second.second == adapter ) {
+                    return p.first;
+                }
+            }
+            return TAI_NULL_OBJECT_ID;
+        }
 
         int create_mapping(tai_object_id_t *id, ModuleAdapter* adapter, const tai_object_id_t& real_id) {
             auto value = std::pair<tai_object_id_t, ModuleAdapter*>(real_id, adapter);
@@ -145,6 +161,9 @@ class Multiplexier {
             m_oid_allocator.free(id);
             return 0;
         }
+
+        tai_status_t convert_oid(ModuleAdapter *adapter, tai_object_type_t t, const tai_attribute_t *src, tai_attribute_t *dst, bool reversed);
+        int free_attributes(tai_object_type_t t, std::vector<tai_attribute_t>& attributes);
 };
 
 Multiplexier* create_mux(platform_adapter_t pa_kind, uint64_t flags, const tai_service_method_table_t* services);
