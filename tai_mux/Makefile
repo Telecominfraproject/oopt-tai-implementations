@@ -1,6 +1,6 @@
 CC := g++
 CFLAGS := -std=c++11 -fPIC
-INCLUDES := -I ./oopt-tai/inc
+INCLUDES := -I ./oopt-tai/inc -I ./oopt-tai/meta/
 BUILDDIR := build
 SRCDIR := .
 SRCEXT := cpp
@@ -11,8 +11,11 @@ TARGET := libtai-mux.so
 
 all: $(TARGET)
 
-$(TARGET): $(OBJECTS)
-	$(CC) $(CFLAGS) -shared $^ -o $@ -ldl -lpthread
+oopt-tai/meta/taimetadata.h:
+	$(MAKE) -C ./oopt-tai/meta
+
+$(TARGET): oopt-tai/meta/taimetadata.h $(OBJECTS)
+	$(CC) $(CFLAGS) $(INCLUDES) -shared $^ -o $@ -ldl -lpthread -L ./oopt-tai/meta -lmetatai
 
 $(BUILDDIR)/%.o: $(SRCDIR)/%.$(SRCEXT)
 	@mkdir -p $(BUILDDIR)

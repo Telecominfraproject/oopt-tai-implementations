@@ -1,5 +1,6 @@
 #include "mux.hpp"
 #include <iostream>
+#include "taimetadata.h"
 
 Multiplexier *g_mux;
 
@@ -68,31 +69,13 @@ tai_status_t Multiplexier::remove_host_interface(
 tai_status_t Multiplexier::set_host_interface_attributes(_In_ tai_object_id_t host_interface_id,
                                                  _In_ uint32_t attr_count,
                                                  _In_ const tai_attribute_t *attr_list) {
-    tai_object_id_t id;
-    ModuleAdapter *m_adapter;
-    if ( g_mux == nullptr ) {
-        return TAI_STATUS_UNINITIALIZED;
-    }
-
-    if ( g_mux->get_mapping(host_interface_id, &m_adapter, &id) != 0 ) {
-        return TAI_STATUS_FAILURE;
-    }
-    return m_adapter->set_host_interface_attributes(id, attr_count, attr_list);
+    return set_attributes(&ModuleAdapter::set_host_interface_attributes, host_interface_id, attr_count, attr_list);
 }
 
 tai_status_t Multiplexier::get_host_interface_attributes(_In_ tai_object_id_t host_interface_id,
                                                  _In_ uint32_t attr_count,
                                                  _Out_ tai_attribute_t *attr_list) {
-    tai_object_id_t id;
-    ModuleAdapter *m_adapter;
-    if ( g_mux == nullptr ) {
-        return TAI_STATUS_UNINITIALIZED;
-    }
-
-    if ( g_mux->get_mapping(host_interface_id, &m_adapter, &id) != 0 ) {
-        return TAI_STATUS_FAILURE;
-    }
-    return m_adapter->get_host_interface_attributes(id, attr_count, attr_list);
+    return get_attributes(&ModuleAdapter::get_host_interface_attributes, host_interface_id, attr_count, attr_list);
 }
 
 tai_status_t Multiplexier::create_network_interface(
@@ -146,31 +129,13 @@ tai_status_t Multiplexier::remove_network_interface(
 tai_status_t Multiplexier::set_network_interface_attributes(_In_ tai_object_id_t network_interface_id,
                                                  _In_ uint32_t attr_count,
                                                  _In_ const tai_attribute_t *attr_list) {
-    tai_object_id_t id;
-    ModuleAdapter *m_adapter;
-    if ( g_mux == nullptr ) {
-        return TAI_STATUS_UNINITIALIZED;
-    }
-
-    if ( g_mux->get_mapping(network_interface_id, &m_adapter, &id) != 0 ) {
-        return TAI_STATUS_FAILURE;
-    }
-    return m_adapter->set_network_interface_attributes(id, attr_count, attr_list);
+    return set_attributes(&ModuleAdapter::set_network_interface_attributes, network_interface_id, attr_count, attr_list);
 }
 
 tai_status_t Multiplexier::get_network_interface_attributes(_In_ tai_object_id_t network_interface_id,
                                                  _In_ uint32_t attr_count,
                                                  _Out_ tai_attribute_t *attr_list) {
-    tai_object_id_t id;
-    ModuleAdapter *m_adapter;
-    if ( g_mux == nullptr ) {
-        return TAI_STATUS_UNINITIALIZED;
-    }
-
-    if ( g_mux->get_mapping(network_interface_id, &m_adapter, &id) != 0 ) {
-        return TAI_STATUS_FAILURE;
-    }
-    return m_adapter->get_network_interface_attributes(id, attr_count, attr_list);
+    return get_attributes(&ModuleAdapter::get_network_interface_attributes, network_interface_id, attr_count, attr_list);
 }
 
 tai_status_t Multiplexier::create_module(
@@ -233,31 +198,13 @@ tai_status_t Multiplexier::remove_module(_In_ tai_object_id_t module_id) {
 tai_status_t Multiplexier::set_module_attributes(_In_ tai_object_id_t module_id,
                                                  _In_ uint32_t attr_count,
                                                  _In_ const tai_attribute_t *attr_list) {
-    tai_object_id_t id;
-    ModuleAdapter *m_adapter;
-    if ( g_mux == nullptr ) {
-        return TAI_STATUS_UNINITIALIZED;
-    }
-
-    if ( g_mux->get_mapping(module_id, &m_adapter, &id) != 0 ) {
-        return TAI_STATUS_FAILURE;
-    }
-    return m_adapter->set_module_attributes(id, attr_count, attr_list);
+    return set_attributes(&ModuleAdapter::set_module_attributes, module_id, attr_count, attr_list);
 }
 
 tai_status_t Multiplexier::get_module_attributes(_In_ tai_object_id_t module_id,
                                                  _In_ uint32_t attr_count,
                                                  _Out_ tai_attribute_t *attr_list) {
-    tai_object_id_t id;
-    ModuleAdapter *m_adapter;
-    if ( g_mux == nullptr ) {
-        return TAI_STATUS_UNINITIALIZED;
-    }
-
-    if ( g_mux->get_mapping(module_id, &m_adapter, &id) != 0 ) {
-        return TAI_STATUS_FAILURE;
-    }
-    return m_adapter->get_module_attributes(id, attr_count, attr_list);
+    return get_attributes(&ModuleAdapter::get_module_attributes, module_id, attr_count, attr_list);
 }
 
 tai_object_type_t Multiplexier::object_type_query(_In_ tai_object_id_t id) {
@@ -271,6 +218,128 @@ tai_object_type_t Multiplexier::object_type_query(_In_ tai_object_id_t id) {
         return TAI_OBJECT_TYPE_NULL;
     }
     return m_adapter->tai_object_type_query(realid);
+}
+
+tai_status_t Multiplexier::set_attributes( std::function<tai_status_t(ModuleAdapter*, tai_object_id_t, uint32_t, const tai_attribute_t*)> f, tai_object_id_t oid, uint32_t attr_count, const tai_attribute_t *attr_list) {
+    tai_object_id_t id;
+    ModuleAdapter *m_adapter;
+    tai_status_t ret;
+    if ( g_mux == nullptr ) {
+        return TAI_STATUS_UNINITIALIZED;
+    }
+
+    if ( g_mux->get_mapping(oid, &m_adapter, &id) != 0 ) {
+        return TAI_STATUS_FAILURE;
+    }
+
+    std::vector<tai_attribute_t> attrs;
+    tai_alloc_info_t info;
+    auto t = object_type_query(oid);
+    for ( auto i = 0; i < attr_count; i++ ) {
+        auto meta = tai_metadata_get_attr_metadata(t, attr_list[i].id);
+        tai_attribute_t attr;
+        attr.id = attr_list[i].id;
+        info.reference = &attr_list[i];
+        if ( tai_metadata_alloc_attr_value(meta, &attr, &info) != 0 ) {
+            goto err;
+        }
+        if ( tai_metadata_deepcopy_attr_value(meta, &attr_list[i], &attr) != 0 ) {
+            goto err;
+        }
+        ret = convert_oid(m_adapter, t, &attr, &attr, false);
+        if ( ret != TAI_STATUS_SUCCESS ) {
+            goto err;
+        }
+        attrs.emplace_back(attr);
+    }
+    ret = f(m_adapter, id, attrs.size(), attrs.data());
+err:
+    if ( free_attributes(t, attrs) < 0 ) {
+        return TAI_STATUS_FAILURE;
+    }
+    return ret;
+}
+
+tai_status_t Multiplexier::get_attributes( std::function<tai_status_t(ModuleAdapter*, tai_object_id_t, uint32_t, tai_attribute_t*)> f, tai_object_id_t oid, uint32_t attr_count, tai_attribute_t *attr_list) {
+    tai_object_id_t id;
+    ModuleAdapter *m_adapter;
+    if ( g_mux == nullptr ) {
+        return TAI_STATUS_UNINITIALIZED;
+    }
+
+    if ( g_mux->get_mapping(oid, &m_adapter, &id) != 0 ) {
+        return TAI_STATUS_FAILURE;
+    }
+
+    auto ret = f(m_adapter, id, attr_count, attr_list);
+    if ( ret != TAI_STATUS_SUCCESS ) {
+        return ret;
+    }
+
+    auto t = object_type_query(oid);
+    for ( auto i = 0; i < attr_count; i++ ) {
+        ret = convert_oid(m_adapter, t, &attr_list[i], &attr_list[i], true);
+        if ( ret != TAI_STATUS_SUCCESS ) {
+            return ret;
+        }
+    }
+    return TAI_STATUS_SUCCESS;
+}
+
+tai_status_t Multiplexier::convert_oid(ModuleAdapter *adapter, tai_object_type_t t, const tai_attribute_t *src, tai_attribute_t *dst, bool reversed) {
+    auto meta = tai_metadata_get_attr_metadata(t, src->id);
+    const tai_object_map_list_t *oml;
+    auto convert = [&](tai_object_id_t s) -> tai_object_id_t {
+        if ( reversed ) {
+            return g_mux->get_reverse_mapping(s, adapter);
+        }
+        tai_object_id_t oid;
+        if ( g_mux->get_mapping(s, nullptr, &oid) < 0 ) {
+            return TAI_NULL_OBJECT_ID;
+        }
+        return oid;
+    };
+
+    switch (meta->attrvaluetype) {
+    case TAI_ATTR_VALUE_TYPE_OID:
+        dst->value.oid = convert(src->value.oid);
+        if ( dst->value.oid == TAI_NULL_OBJECT_ID ) {
+            return TAI_STATUS_FAILURE;
+        }
+        break;
+    case TAI_ATTR_VALUE_TYPE_OBJLIST:
+        for ( auto i = 0 ; i < src->value.objlist.count; i++ ) {
+            dst->value.objlist.list[i] = convert(src->value.objlist.list[i]);
+            if ( dst->value.objlist.list[i] == TAI_NULL_OBJECT_ID ) {
+                return TAI_STATUS_FAILURE;
+            }
+        }
+        break;
+    case TAI_ATTR_VALUE_TYPE_OBJMAPLIST:
+        oml = &src->value.objmaplist;
+        for ( auto i = 0 ; i < oml->count; i++ ) {
+            dst->value.objmaplist.list[i].key = convert(oml->list[i].key);
+            if ( dst->value.objmaplist.list[i].key == TAI_NULL_OBJECT_ID ) {
+                return TAI_STATUS_FAILURE;
+            }
+            for ( auto j = 0; j < oml->list[i].value.count; j++ ) {
+                dst->value.objmaplist.list[i].value.list[j] = convert(oml->list[i].value.list[j]);
+                if ( dst->value.objmaplist.list[i].value.list[j] == TAI_NULL_OBJECT_ID ) {
+                    return TAI_STATUS_FAILURE;
+                }
+            }
+        }
+        break;
+    }
+    return TAI_STATUS_SUCCESS;
+}
+
+int Multiplexier::free_attributes(tai_object_type_t t, std::vector<tai_attribute_t>& attributes) {
+    for ( auto a : attributes ) {
+        auto meta = tai_metadata_get_attr_metadata(t, a.id);
+        tai_metadata_free_attr_value(meta, &a, nullptr);
+    }
+    return 0;
 }
 
 Multiplexier* create_mux(platform_adapter_t pa_kind, uint64_t flags, const tai_service_method_table_t* services) {
