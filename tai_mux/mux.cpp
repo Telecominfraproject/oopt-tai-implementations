@@ -220,6 +220,49 @@ tai_object_type_t Multiplexier::object_type_query(_In_ tai_object_id_t id) {
     return m_adapter->tai_object_type_query(realid);
 }
 
+void notification_callback(void* context, tai_object_id_t oid, tai_attribute_t const * const attribute) {
+    if ( context == nullptr || attribute == nullptr ) {
+        return;
+    }
+    auto ctx = static_cast<notification_context*>(context);
+    ctx->mux->notify(ctx, oid, attribute);
+}
+
+void Multiplexier::notify(notification_context* ctx, tai_object_id_t real_oid, tai_attribute_t const * const src) {
+    auto oid = get_reverse_mapping(real_oid, ctx->adapter);
+    if ( oid == TAI_NULL_OBJECT_ID ) {
+        return;
+    }
+    auto key = std::pair<tai_object_id_t, tai_attr_id_t>(oid, ctx->notify_id);
+    tai_attribute_t dst;
+    tai_alloc_info_t info;
+    info.reference = src;
+    auto t = object_type_query(oid);
+
+    auto meta = tai_metadata_get_attr_metadata(t, src->id);
+    if ( meta == nullptr ) {
+        return;
+    }
+
+    dst.id = src->id;
+
+    if ( tai_metadata_alloc_attr_value(meta, &dst, &info) != 0 ) {
+        return;
+    }
+
+    if ( tai_metadata_deepcopy_attr_value(meta, src, &dst) != 0 ) {
+        goto err;
+    }
+
+    if ( convert_oid(oid, &dst, &dst, true) != TAI_STATUS_SUCCESS ) {
+        goto err;
+    }
+
+    ctx->handler.notify(ctx->handler.context, oid, &dst);
+err:
+    tai_metadata_free_attr_value(meta, &dst, nullptr);
+}
+
 tai_status_t Multiplexier::set_attributes( std::function<tai_status_t(ModuleAdapter*, tai_object_id_t, uint32_t, const tai_attribute_t*)> f, tai_object_id_t oid, uint32_t attr_count, const tai_attribute_t *attr_list) {
     tai_object_id_t id;
     ModuleAdapter *m_adapter;
@@ -237,6 +280,10 @@ tai_status_t Multiplexier::set_attributes( std::function<tai_status_t(ModuleAdap
     auto t = object_type_query(oid);
     for ( auto i = 0; i < attr_count; i++ ) {
         auto meta = tai_metadata_get_attr_metadata(t, attr_list[i].id);
+        if ( meta == nullptr ) {
+            goto err;
+        }
+
         tai_attribute_t attr;
         attr.id = attr_list[i].id;
         info.reference = &attr_list[i];
@@ -246,7 +293,7 @@ tai_status_t Multiplexier::set_attributes( std::function<tai_status_t(ModuleAdap
         if ( tai_metadata_deepcopy_attr_value(meta, &attr_list[i], &attr) != 0 ) {
             goto err;
         }
-        ret = convert_oid(m_adapter, t, &attr, &attr, false);
+        ret = convert_oid(oid, &attr, &attr, false);
         if ( ret != TAI_STATUS_SUCCESS ) {
             goto err;
         }
@@ -278,7 +325,7 @@ tai_status_t Multiplexier::get_attributes( std::function<tai_status_t(ModuleAdap
 
     auto t = object_type_query(oid);
     for ( auto i = 0; i < attr_count; i++ ) {
-        ret = convert_oid(m_adapter, t, &attr_list[i], &attr_list[i], true);
+        ret = convert_oid(oid, &attr_list[i], &attr_list[i], true);
         if ( ret != TAI_STATUS_SUCCESS ) {
             return ret;
         }
@@ -286,7 +333,12 @@ tai_status_t Multiplexier::get_attributes( std::function<tai_status_t(ModuleAdap
     return TAI_STATUS_SUCCESS;
 }
 
-tai_status_t Multiplexier::convert_oid(ModuleAdapter *adapter, tai_object_type_t t, const tai_attribute_t *src, tai_attribute_t *dst, bool reversed) {
+tai_status_t Multiplexier::convert_oid(tai_object_id_t oid, const tai_attribute_t *src, tai_attribute_t *dst, bool reversed) {
+    ModuleAdapter* adapter;
+    auto t = object_type_query(oid);
+    if ( g_mux->get_mapping(oid, &adapter, nullptr) != 0 ) {
+        return TAI_STATUS_FAILURE;
+    }
     auto meta = tai_metadata_get_attr_metadata(t, src->id);
     const tai_object_map_list_t *oml;
     auto convert = [&](tai_object_id_t s) -> tai_object_id_t {
@@ -299,6 +351,7 @@ tai_status_t Multiplexier::convert_oid(ModuleAdapter *adapter, tai_object_type_t
         }
         return oid;
     };
+    auto key = std::pair<tai_object_id_t, tai_attr_id_t>(oid, src->id);
 
     switch (meta->attrvaluetype) {
     case TAI_ATTR_VALUE_TYPE_OID:
@@ -330,6 +383,30 @@ tai_status_t Multiplexier::convert_oid(ModuleAdapter *adapter, tai_object_type_t
             }
         }
         break;
+    case TAI_ATTR_VALUE_TYPE_NOTIFICATION:
+        if ( reversed ) {
+            if ( m_notification_map.find(key) != m_notification_map.end() ) {
+                auto n = m_notification_map[key];
+                dst->value.notification.context = n->handler.context;
+                dst->value.notification.notify = n->handler.notify;
+            }
+        } else {
+            if ( src->value.notification.notify == nullptr ) {
+                delete m_notification_map[key];
+                m_notification_map.erase(key);
+            } else {
+                if ( m_notification_map.find(key) == m_notification_map.end() ) {
+                    m_notification_map[key] = new notification_context();
+                }
+                auto n = m_notification_map[key];
+                n->mux = this;
+                n->adapter = adapter;
+                n->handler = src->value.notification;
+                n->notify_id = src->id;
+                dst->value.notification.context = n;
+                dst->value.notification.notify = notification_callback;
+            }
+        }
     }
     return TAI_STATUS_SUCCESS;
 }

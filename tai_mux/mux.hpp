@@ -29,6 +29,15 @@ class OIDAllocator {
         std::bitset<256> m_bitset;
 };
 
+class Multiplexier;
+
+struct notification_context {
+    Multiplexier* mux;
+    ModuleAdapter* adapter;
+    tai_notification_handler_t handler;
+    tai_attr_id_t notify_id;
+};
+
 // singleton
 class Multiplexier {
     public:
@@ -53,6 +62,8 @@ class Multiplexier {
         ModuleAdapter * get_module_adapter(const std::string& location) {
             return m_pa->get_module_adapter(location);
         }
+
+        void notify(notification_context* ctx, tai_object_id_t real_oid, tai_attribute_t const * const src);
 
         tai_status_t create_module(
                 _Out_ tai_object_id_t *module_id,
@@ -118,6 +129,8 @@ class Multiplexier {
         void operator = (const Multiplexier&){}
         PlatformAdapter *m_pa;
         std::map<tai_object_id_t, std::pair<tai_object_id_t, ModuleAdapter* >> m_map;
+        std::map<std::pair<tai_object_id_t, tai_attr_id_t>, notification_context*> m_notification_map;
+
         OIDAllocator m_oid_allocator;
 
         tai_status_t set_attributes( std::function<tai_status_t(ModuleAdapter*, tai_object_id_t, uint32_t, const tai_attribute_t*)> f, tai_object_id_t oid, uint32_t attr_count, const tai_attribute_t *attr_list);
@@ -162,7 +175,7 @@ class Multiplexier {
             return 0;
         }
 
-        tai_status_t convert_oid(ModuleAdapter *adapter, tai_object_type_t t, const tai_attribute_t *src, tai_attribute_t *dst, bool reversed);
+        tai_status_t convert_oid(tai_object_id_t oid, const tai_attribute_t *src, tai_attribute_t *dst, bool reversed);
         int free_attributes(tai_object_type_t t, std::vector<tai_attribute_t>& attributes);
 };
 
