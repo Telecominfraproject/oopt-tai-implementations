@@ -220,6 +220,20 @@ tai_object_type_t Multiplexier::object_type_query(_In_ tai_object_id_t id) {
     return m_adapter->tai_object_type_query(realid);
 }
 
+tai_status_t Multiplexier::tai_log_set(_In_ tai_api_t api, _In_ tai_log_level_t level) {
+    if ( g_mux == nullptr ) {
+        return TAI_STATUS_UNINITIALIZED;
+    }
+    auto set = m_pa->list_module_adapters();
+    for ( const auto& a :  set ) {
+        auto ret = a->tai_log_set(api, level);
+        if ( ret != TAI_STATUS_SUCCESS ) {
+            return ret;
+        }
+    }
+    return TAI_STATUS_SUCCESS;
+}
+
 tai_status_t Multiplexier::set_attributes( std::function<tai_status_t(ModuleAdapter*, tai_object_id_t, uint32_t, const tai_attribute_t*)> f, tai_object_id_t oid, uint32_t attr_count, const tai_attribute_t *attr_list) {
     tai_object_id_t id;
     ModuleAdapter *m_adapter;
