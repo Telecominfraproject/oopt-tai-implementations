@@ -24,6 +24,13 @@ class StaticPlatformAdapter : public PlatformAdapter {
         ModuleAdapter* get_module_adapter(const std::string& location) {
             return m_ma_map[location];
         };
+        const std::unordered_set<ModuleAdapter*> list_module_adapters() {
+            std::unordered_set<ModuleAdapter*> set;
+            for ( auto m : m_ma_map ) {
+                set.emplace(m.second);
+            }
+            return set;
+        };
     private:
         std::map<std::string, ModuleAdapter*> m_ma_map;
         std::thread m_th;
