@@ -9,6 +9,7 @@
 #include "tai.h"
 #include <sstream>
 #include <bitset>
+#include <mutex>
 
 class OIDAllocator {
     public:
@@ -36,7 +37,10 @@ struct notification_context {
     ModuleAdapter* adapter;
     tai_notification_handler_t handler;
     tai_attr_id_t notify_id;
+    std::mutex mutex;
 };
+
+using notification_key = std::pair<tai_object_id_t, tai_attr_id_t>;
 
 // singleton
 class Multiplexier {
@@ -56,6 +60,9 @@ class Multiplexier {
         ~Multiplexier(){
             if ( m_pa != nullptr ) {
                 delete m_pa;
+            }
+            for ( auto& n : m_notification_map ) {
+                delete n.second;
             }
         }
 
@@ -133,7 +140,7 @@ class Multiplexier {
         void operator = (const Multiplexier&){}
         PlatformAdapter *m_pa;
         std::map<tai_object_id_t, std::pair<tai_object_id_t, ModuleAdapter* >> m_map;
-        std::map<std::pair<tai_object_id_t, tai_attr_id_t>, notification_context*> m_notification_map;
+        std::map<notification_key, notification_context*> m_notification_map;
 
         OIDAllocator m_oid_allocator;
 
