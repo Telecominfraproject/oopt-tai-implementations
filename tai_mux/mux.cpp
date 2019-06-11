@@ -247,7 +247,6 @@ void Multiplexier::notify(notification_context* ctx, tai_object_id_t real_oid, t
     if ( oid == TAI_NULL_OBJECT_ID ) {
         return;
     }
-    auto key = std::pair<tai_object_id_t, tai_attr_id_t>(oid, ctx->notify_id);
     tai_attribute_t dst;
     tai_alloc_info_t info;
     info.reference = src;
@@ -272,7 +271,10 @@ void Multiplexier::notify(notification_context* ctx, tai_object_id_t real_oid, t
         goto err;
     }
 
-    ctx->handler.notify(ctx->handler.context, oid, &dst);
+    {
+        std::unique_lock<std::mutex> lk(ctx->mutex);
+        ctx->handler.notify(ctx->handler.context, oid, &dst);
+    }
 err:
     tai_metadata_free_attr_value(meta, &dst, nullptr);
 }
@@ -292,6 +294,7 @@ tai_status_t Multiplexier::set_attributes( std::function<tai_status_t(ModuleAdap
     std::vector<tai_attribute_t> attrs;
     tai_alloc_info_t info;
     auto t = object_type_query(oid);
+    std::vector<notification_key> n_to_clear;
     for ( auto i = 0; i < attr_count; i++ ) {
         auto meta = tai_metadata_get_attr_metadata(t, attr_list[i].id);
         if ( meta == nullptr ) {
@@ -312,8 +315,19 @@ tai_status_t Multiplexier::set_attributes( std::function<tai_status_t(ModuleAdap
             goto err;
         }
         attrs.emplace_back(attr);
+        // we can't delete m_notification_map[key] before calling f() since
+        // the adapter can still call the notification callback.
+        // store the keys to be removed into n_to_clear and delete them after calling f()
+        if ( meta->attrvaluetype == TAI_ATTR_VALUE_TYPE_NOTIFICATION && attr.value.notification.notify == nullptr ) {
+            n_to_clear.emplace_back(notification_key(oid, attr.id));
+        }
     }
     ret = f(m_adapter, id, attrs.size(), attrs.data());
+
+    for ( auto& key : n_to_clear ) {
+        delete m_notification_map[key];
+        m_notification_map.erase(key);
+    }
 err:
     if ( free_attributes(t, attrs) < 0 ) {
         return TAI_STATUS_FAILURE;
@@ -365,7 +379,7 @@ tai_status_t Multiplexier::convert_oid(tai_object_id_t oid, const tai_attribute_
         }
         return oid;
     };
-    auto key = std::pair<tai_object_id_t, tai_attr_id_t>(oid, src->id);
+    auto key = notification_key(oid, src->id);
 
     switch (meta->attrvaluetype) {
     case TAI_ATTR_VALUE_TYPE_OID:
@@ -405,14 +419,12 @@ tai_status_t Multiplexier::convert_oid(tai_object_id_t oid, const tai_attribute_
                 dst->value.notification.notify = n->handler.notify;
             }
         } else {
-            if ( src->value.notification.notify == nullptr ) {
-                delete m_notification_map[key];
-                m_notification_map.erase(key);
-            } else {
+            if ( src->value.notification.notify != nullptr ) {
                 if ( m_notification_map.find(key) == m_notification_map.end() ) {
                     m_notification_map[key] = new notification_context();
                 }
                 auto n = m_notification_map[key];
+                std::unique_lock<std::mutex> lk(n->mutex);
                 n->mux = this;
                 n->adapter = adapter;
                 n->handler = src->value.notification;
