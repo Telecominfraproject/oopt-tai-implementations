@@ -227,3 +227,7 @@ tai_status_t tai_log_set(tai_api_t tai_api_id, tai_log_level_t log_level) {
 tai_object_type_t tai_object_type_query(tai_object_id_t id) {
     return g_mux->object_type_query(id);
 }
+
+tai_object_id_t tai_module_id_query(tai_object_id_t id) {
+    return g_mux->module_id_query(id);
+}

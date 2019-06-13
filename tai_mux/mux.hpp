@@ -131,6 +131,9 @@ class Multiplexier {
         tai_object_type_t object_type_query(
                 _In_ tai_object_id_t id);
 
+        tai_object_id_t module_id_query(
+                _In_ tai_object_id_t id);
+
         tai_status_t tai_log_set(
                 _In_ tai_api_t tai_api_id,
                 _In_ tai_log_level_t log_level);
