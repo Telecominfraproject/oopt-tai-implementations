@@ -220,6 +220,19 @@ tai_object_type_t Multiplexier::object_type_query(_In_ tai_object_id_t id) {
     return m_adapter->tai_object_type_query(realid);
 }
 
+tai_object_id_t Multiplexier::module_id_query(_In_ tai_object_id_t id) {
+    tai_object_id_t realid;
+    ModuleAdapter *m_adapter;
+    if ( g_mux == nullptr ) {
+        return TAI_NULL_OBJECT_ID;
+    }
+
+    if ( g_mux->get_mapping(id, &m_adapter, &realid) != 0 ) {
+        return TAI_NULL_OBJECT_ID;
+    }
+    return g_mux->get_reverse_mapping(m_adapter->tai_module_id_query(realid), m_adapter);
+}
+
 tai_status_t Multiplexier::tai_log_set(_In_ tai_api_t api, _In_ tai_log_level_t level) {
     if ( g_mux == nullptr ) {
         return TAI_STATUS_UNINITIALIZED;
