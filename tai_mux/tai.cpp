@@ -220,8 +220,8 @@ tai_status_t tai_api_query(_In_ tai_api_t tai_api_id,
     return TAI_STATUS_SUCCESS;
 }
 
-tai_status_t tai_log_set(tai_api_t tai_api_id, tai_log_level_t log_level) {
-    return g_mux->tai_log_set(tai_api_id, log_level);
+tai_status_t tai_log_set(tai_api_t tai_api_id, tai_log_level_t log_level, tai_log_fn log_fn) {
+    return g_mux->tai_log_set(tai_api_id, log_level, log_fn);
 }
 
 tai_object_type_t tai_object_type_query(tai_object_id_t id) {

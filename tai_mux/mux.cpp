@@ -233,13 +233,13 @@ tai_object_id_t Multiplexier::module_id_query(_In_ tai_object_id_t id) {
     return g_mux->get_reverse_mapping(m_adapter->tai_module_id_query(realid), m_adapter);
 }
 
-tai_status_t Multiplexier::tai_log_set(_In_ tai_api_t api, _In_ tai_log_level_t level) {
+tai_status_t Multiplexier::tai_log_set(_In_ tai_api_t api, _In_ tai_log_level_t level, _In_ tai_log_fn log_fn) {
     if ( g_mux == nullptr ) {
         return TAI_STATUS_UNINITIALIZED;
     }
     auto set = m_pa->list_module_adapters();
     for ( const auto& a :  set ) {
-        auto ret = a->tai_log_set(api, level);
+        auto ret = a->tai_log_set(api, level, log_fn);
         if ( ret != TAI_STATUS_SUCCESS ) {
             return ret;
         }
