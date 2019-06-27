@@ -136,7 +136,8 @@ class Multiplexier {
 
         tai_status_t tai_log_set(
                 _In_ tai_api_t tai_api_id,
-                _In_ tai_log_level_t log_level);
+                _In_ tai_log_level_t log_level,
+                _In_ tai_log_fn log_fn);
 
     private:
         Multiplexier(const Multiplexier&){}

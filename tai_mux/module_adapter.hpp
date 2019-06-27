@@ -7,7 +7,7 @@
 typedef tai_status_t (*tai_api_initialize_fn) (uint64_t, const tai_service_method_table_t *);
 typedef tai_status_t (*tai_api_uninitialize_fn) (void);
 typedef tai_status_t (*tai_api_query_fn) (tai_api_t, void**);
-typedef tai_status_t (*tai_log_set_fn) (tai_api_t, tai_log_level_t);
+typedef tai_status_t (*tai_log_set_fn) (tai_api_t, tai_log_level_t, tai_log_fn);
 typedef tai_object_type_t (*tai_object_type_query_fn) (tai_object_id_t);
 typedef tai_object_id_t (*tai_module_id_query_fn) (tai_object_id_t);
 
@@ -27,8 +27,8 @@ class ModuleAdapter {
         tai_status_t tai_api_uninitialize(void) {
             return m_tai_api_uninitialize();
         }
-        tai_status_t tai_log_set(tai_api_t tai_api_id, tai_log_level_t log_level) {
-            return m_tai_log_set(tai_api_id, log_level);
+        tai_status_t tai_log_set(tai_api_t tai_api_id, tai_log_level_t log_level, tai_log_fn log_fn) {
+            return m_tai_log_set(tai_api_id, log_level, log_fn);
         }
         tai_object_type_t tai_object_type_query(tai_object_id_t tai_object_id) {
             return m_tai_object_type_query(tai_object_id);
