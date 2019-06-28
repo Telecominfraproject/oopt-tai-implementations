@@ -85,13 +85,30 @@ static tai_status_t mux_get_host_interface_attribute(
     return g_mux->get_host_interface_attributes(host_interface_id, 1, attr);
 }
 
+static tai_status_t mux_clear_host_interface_attributes(
+   _In_ tai_object_id_t        host_interface_id,
+   _In_ uint32_t               attr_count,
+   _Out_ tai_attr_id_t *attr_list)
+{
+    return g_mux->clear_host_interface_attributes(host_interface_id, attr_count, attr_list);
+}
+
+static tai_status_t mux_clear_host_interface_attribute(
+   _In_ tai_object_id_t        host_interface_id,
+   _Out_ tai_attr_id_t attr_id)
+{
+    return g_mux->clear_host_interface_attributes(host_interface_id, 1, &attr_id);
+}
+
 tai_host_interface_api_t mux_host_interface_api = {
-    .create_host_interface         = mux_create_host_interface,
-    .remove_host_interface         = mux_remove_host_interface,
-    .set_host_interface_attribute  = mux_set_host_interface_attribute,
-    .set_host_interface_attributes = mux_set_host_interface_attributes,
-    .get_host_interface_attribute  = mux_get_host_interface_attribute,
-    .get_host_interface_attributes = mux_get_host_interface_attributes
+    .create_host_interface           = mux_create_host_interface,
+    .remove_host_interface           = mux_remove_host_interface,
+    .set_host_interface_attribute    = mux_set_host_interface_attribute,
+    .set_host_interface_attributes   = mux_set_host_interface_attributes,
+    .get_host_interface_attribute    = mux_get_host_interface_attribute,
+    .get_host_interface_attributes   = mux_get_host_interface_attributes,
+    .clear_host_interface_attribute  = mux_clear_host_interface_attribute,
+    .clear_host_interface_attributes = mux_clear_host_interface_attributes
 };
 
 static tai_status_t mux_create_network_interface(

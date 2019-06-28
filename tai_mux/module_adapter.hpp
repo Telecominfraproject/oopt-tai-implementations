@@ -153,6 +153,16 @@ class ModuleAdapter {
             return m_hostif_api->get_host_interface_attributes(host_interface_id, attr_count, attr_list);
         }
 
+        tai_status_t clear_host_interface_attributes(
+            _In_ tai_object_id_t host_interface_id,
+            _In_ uint32_t attr_count,
+            _In_ tai_attr_id_t *attr_list) {
+            if ( m_hostif_api == nullptr || m_hostif_api->clear_host_interface_attributes == nullptr ) {
+                return TAI_STATUS_FAILURE;
+            }
+            return m_hostif_api->clear_host_interface_attributes(host_interface_id, attr_count, attr_list);
+        }
+
     private:
         void* m_dl;
         const std::string& m_name;
