@@ -78,6 +78,22 @@ tai_status_t Multiplexier::get_host_interface_attributes(_In_ tai_object_id_t ho
     return get_attributes(&ModuleAdapter::get_host_interface_attributes, host_interface_id, attr_count, attr_list);
 }
 
+tai_status_t Multiplexier::clear_host_interface_attributes(_In_ tai_object_id_t host_interface_id,
+                                                 _In_ uint32_t attr_count,
+                                                 _Out_ tai_attr_id_t *attr_list) {
+    tai_object_id_t id;
+    ModuleAdapter *m_adapter;
+    if ( g_mux == nullptr ) {
+        return TAI_STATUS_UNINITIALIZED;
+    }
+
+    if ( g_mux->get_mapping(host_interface_id, &m_adapter, &id) != 0 ) {
+        return TAI_STATUS_FAILURE;
+    }
+
+    return m_adapter->clear_host_interface_attributes(id, attr_count, attr_list);
+}
+
 tai_status_t Multiplexier::create_network_interface(
         _Out_ tai_object_id_t *network_interface_id,
         _In_ tai_object_id_t module_id,

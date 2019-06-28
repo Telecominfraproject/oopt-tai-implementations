@@ -128,6 +128,11 @@ class Multiplexier {
                 _In_ uint32_t               attr_count,
                 _Out_ tai_attribute_t *attr_list);
 
+        tai_status_t clear_host_interface_attributes(
+                _In_ tai_object_id_t        host_interface_id,
+                _In_ uint32_t               attr_count,
+                _Out_ tai_attr_id_t *attr_list);
+
         tai_object_type_t object_type_query(
                 _In_ tai_object_id_t id);
 
