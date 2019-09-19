@@ -263,49 +263,65 @@ tai_status_t Multiplexier::tai_log_set(_In_ tai_api_t api, _In_ tai_log_level_t 
     return TAI_STATUS_SUCCESS;
 }
 
-void notification_callback(void* context, tai_object_id_t oid, tai_attribute_t const * const attribute) {
-    if ( context == nullptr || attribute == nullptr ) {
+void notification_callback(void* context, tai_object_id_t oid, uint32_t attr_count, tai_attribute_t const * const attr_list) {
+    if ( context == nullptr || attr_list == nullptr ) {
         return;
     }
     auto ctx = static_cast<notification_context*>(context);
-    ctx->mux->notify(ctx, oid, attribute);
+    ctx->mux->notify(ctx, oid, attr_count, attr_list);
 }
 
-void Multiplexier::notify(notification_context* ctx, tai_object_id_t real_oid, tai_attribute_t const * const src) {
+void Multiplexier::notify(notification_context* ctx, tai_object_id_t real_oid, uint32_t attr_count, tai_attribute_t const * const attr_list) {
     auto oid = get_reverse_mapping(real_oid, ctx->adapter);
     if ( oid == TAI_NULL_OBJECT_ID ) {
         return;
     }
-    tai_attribute_t dst;
-    tai_alloc_info_t info;
-    info.reference = src;
     auto t = object_type_query(oid);
+    std::vector<tai_attribute_t> attrs;
+    tai_attribute_t dst;
+    const tai_attr_metadata_t *meta;
 
-    auto meta = tai_metadata_get_attr_metadata(t, src->id);
-    if ( meta == nullptr ) {
-        return;
-    }
+    for ( int i = 0; i < attr_count; i++ ) {
+        auto src = attr_list[i];
+        meta = tai_metadata_get_attr_metadata(t, src.id);
+        if ( meta == nullptr ) {
+            continue;
+        }
+        tai_alloc_info_t info;
+        info.reference = &src;
+        dst.id = src.id;
 
-    dst.id = src->id;
+        if ( tai_metadata_alloc_attr_value(meta, &dst, &info) != 0 ) {
+            return;
+        }
 
-    if ( tai_metadata_alloc_attr_value(meta, &dst, &info) != 0 ) {
-        return;
-    }
+        if ( tai_metadata_deepcopy_attr_value(meta, &src, &dst) != 0 ) {
+            goto err;
+        }
 
-    if ( tai_metadata_deepcopy_attr_value(meta, src, &dst) != 0 ) {
-        goto err;
-    }
+        if ( convert_oid(oid, &dst, &dst, true) != TAI_STATUS_SUCCESS ) {
+            goto err;
+        }
 
-    if ( convert_oid(oid, &dst, &dst, true) != TAI_STATUS_SUCCESS ) {
-        goto err;
+        attrs.emplace_back(dst);
     }
 
     {
         std::unique_lock<std::mutex> lk(ctx->mutex);
-        ctx->handler.notify(ctx->handler.context, oid, &dst);
+        ctx->handler.notify(ctx->handler.context, oid, attrs.size(), attrs.data());
     }
+
+    for ( auto a : attrs ) {
+        auto meta = tai_metadata_get_attr_metadata(t, a.id);
+        tai_metadata_free_attr_value(meta, &a, nullptr);
+    }
+    return;
 err:
     tai_metadata_free_attr_value(meta, &dst, nullptr);
+    for ( auto a : attrs ) {
+        meta = tai_metadata_get_attr_metadata(t, a.id);
+        tai_metadata_free_attr_value(meta, &a, nullptr);
+    }
 }
 
 tai_status_t Multiplexier::set_attributes( std::function<tai_status_t(ModuleAdapter*, tai_object_id_t, uint32_t, const tai_attribute_t*)> f, tai_object_id_t oid, uint32_t attr_count, const tai_attribute_t *attr_list) {

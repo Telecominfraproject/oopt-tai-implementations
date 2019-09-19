@@ -70,7 +70,7 @@ class Multiplexier {
             return m_pa->get_module_adapter(location);
         }
 
-        void notify(notification_context* ctx, tai_object_id_t real_oid, tai_attribute_t const * const src);
+        void notify(notification_context* ctx, tai_object_id_t real_oid, uint32_t attr_count, tai_attribute_t const * const attr_list);
 
         tai_status_t create_module(
                 _Out_ tai_object_id_t *module_id,
