@@ -12,6 +12,10 @@ ifndef TAI_META_LIBRARY
     TAI_META_LIBRARY := $(TAI_DIR)/meta/libmetatai.so
 endif
 
+ifndef TAI_DOCKER_CMD
+    TAI_DOCKER_CMD := bash
+endif
+
 CFLAGS := -std=c++17 -g3 -shared -fPIC -DTAI_EXPOSE_PLATFORM -fno-gnu-unique
 
 INCLUDES := -I $(TAI_DIR)/inc -I $(TAI_DIR)/meta -I $(TAI_LIB_DIR) -include mux.hpp
@@ -36,8 +40,23 @@ $(BUILDDIR)/%.o: %.cpp Makefile
 
 -include $(DEPS)
 
+test:
+	$(MAKE) -C tests
+
+cmd:
+	TAI_DOCKER_CMD="$(TAI_DOCKER_CMD)" TAI_DOCKER_RUN_OPTION="--privileged --net=host -it --rm" TAI_DOCKER_MOUNT="`pwd`:/data" $(MAKE) -C $(TAI_DIR) $@
+
+docker:
+	TAI_DOCKER_CMD="make" $(MAKE) cmd
+
+docker-image:
+	$(MAKE) -C $(TAI_DIR) $@
+
+bash:
+	$(MAKE) cmd
+
 clean:
 	$(RM) -r $(BUILDDIR) $(TARGET)
 
-bash:
-	TAI_DOCKER_RUN_OPTION="--privileged --net=host -it --rm" TAI_DOCKER_MOUNT="`pwd`:/data" $(MAKE) -C $(TAI_DIR) $@
+clean-all: clean
+	$(MAKE) -C $(TAI_DIR) clean
