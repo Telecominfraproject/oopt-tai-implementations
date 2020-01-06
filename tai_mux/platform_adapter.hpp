@@ -111,7 +111,8 @@ namespace tai::mux {
             tai_status_t convert_oid(const tai_object_type_t& type, const tai_object_id_t& id, const S_ConstAttribute src, const S_Attribute dst, bool reversed);
             tai_status_t convert_oid(const tai_object_type_t& type, const tai_object_id_t& id, const tai_attribute_t * const src, tai_attribute_t * const dst, bool reversed);
 
-            tai_status_t set(const tai_object_type_t& type, const tai_object_id_t& id, const tai_attribute_t* const attribute);
+            tai_status_t get(const tai_object_type_t& type, const tai_object_id_t& id, uint32_t count, tai_attribute_t* const attrs);
+            tai_status_t set(const tai_object_type_t& type, const tai_object_id_t& id, uint32_t count, const tai_attribute_t* const attrs);
 
         private:
             PlatformAdapter(const PlatformAdapter&){}

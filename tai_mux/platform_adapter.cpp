@@ -1,4 +1,5 @@
 #include "platform_adapter.hpp"
+#include "module_adapter.hpp"
 #include <algorithm>
 
 namespace tai::mux {
@@ -30,12 +31,10 @@ namespace tai::mux {
             }
             attrs.emplace_back(dst);
         }
-        {
-            std::vector<tai_attribute_t> raw_attrs;
-            std::transform(attrs.begin(), attrs.end(), std::back_inserter(raw_attrs), [](S_Attribute a) { return *a->raw(); });
-            std::unique_lock<std::mutex> lk(ctx->mutex);
-            ctx->real_handler.notify(ctx->real_handler.context, oid, raw_attrs.size(), raw_attrs.data());
-        }
+        std::vector<tai_attribute_t> raw_attrs;
+        std::transform(attrs.begin(), attrs.end(), std::back_inserter(raw_attrs), [](S_Attribute a) { return *a->raw(); });
+        std::unique_lock<std::mutex> lk(ctx->mutex);
+        ctx->real_handler.notify(ctx->real_handler.context, oid, raw_attrs.size(), raw_attrs.data());
     }
 
     tai_status_t PlatformAdapter::convert_oid(const tai_object_type_t& type, const tai_object_id_t& id, const S_ConstAttribute src, const S_Attribute dst, bool reversed) {
@@ -124,27 +123,60 @@ namespace tai::mux {
         return TAI_STATUS_SUCCESS;
     }
 
-    tai_status_t PlatformAdapter::set(const tai_object_type_t& type, const tai_object_id_t& id, const tai_attribute_t* const attribute) {
+    tai_status_t PlatformAdapter::get(const tai_object_type_t& type, const tai_object_id_t& id, uint32_t count, tai_attribute_t* const attrs) {
         S_ModuleAdapter adapter;
         tai_object_id_t real_id;
         if ( get_mapping(id, &adapter, &real_id) != 0 ) {
             return TAI_STATUS_FAILURE;
         }
-        auto meta = tai_metadata_get_attr_metadata(type, attribute->id);
-        if ( meta == nullptr ) {
+        auto ret = adapter->get_attributes(type, real_id, count, attrs);
+        if ( ret != TAI_STATUS_SUCCESS ) {
+            return ret;
+        }
+        for ( auto i = 0; i < count; i++ ) {
+            auto attribute = &attrs[i];
+            auto ret = convert_oid(type, id, attribute, attribute, true);
+            if ( ret != TAI_STATUS_SUCCESS ) {
+                return ret;
+            }
+        }
+        return TAI_STATUS_SUCCESS;
+    }
+
+    tai_status_t PlatformAdapter::set(const tai_object_type_t& type, const tai_object_id_t& id, uint32_t count, const tai_attribute_t* const attrs) {
+        S_ModuleAdapter adapter;
+        tai_object_id_t real_id;
+        if ( get_mapping(id, &adapter, &real_id) != 0 ) {
             return TAI_STATUS_FAILURE;
         }
-        auto attr = std::make_shared<Attribute>(meta, attribute);
-        auto ret = convert_oid(type, id, attribute, const_cast<tai_attribute_t* const>(attr->raw()), false);
+        std::vector<S_Attribute> ptrs;
+        std::vector<tai_attribute_t> inputs;
+        std::vector<notification_key> keys_to_remove;
+
+        for ( auto i = 0; i < count; i++ ) {
+            auto attribute = &attrs[i];
+            auto meta = tai_metadata_get_attr_metadata(type, attribute->id);
+            if ( meta == nullptr ) {
+                return TAI_STATUS_FAILURE;
+            }
+            auto attr = std::make_shared<Attribute>(meta, attribute);
+            ptrs.emplace_back(attr); // just for memory management
+            auto ret = convert_oid(type, id, attribute, const_cast<tai_attribute_t* const>(attr->raw()), false);
+            if ( ret != TAI_STATUS_SUCCESS ) {
+                return ret;
+            }
+            inputs.emplace_back(*attr->raw());
+            if ( meta->attrvaluetype == TAI_ATTR_VALUE_TYPE_NOTIFICATION && attribute->value.notification.notify == nullptr ) {
+                keys_to_remove.emplace_back(notification_key(id, attribute->id));
+            }
+        }
+
+        auto ret = adapter->set_attributes(type, real_id, inputs.size(), inputs.data());
         if ( ret != TAI_STATUS_SUCCESS ) {
             return ret;
         }
-        ret = adapter->set_attributes(type, real_id, 1, attr->raw());
-        if ( ret != TAI_STATUS_SUCCESS ) {
-            return ret;
-        }
-        if ( meta->attrvaluetype == TAI_ATTR_VALUE_TYPE_NOTIFICATION && attribute->value.notification.notify == nullptr ) {
-            auto key = notification_key(id, attribute->id);
+
+        for ( auto& key : keys_to_remove ) {
             m_notification_map.erase(key);
         }
         return TAI_STATUS_SUCCESS;
