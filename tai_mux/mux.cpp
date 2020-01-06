@@ -24,7 +24,7 @@ namespace tai::mux {
 #define DEFAULT_PLATFORM_ADAPTER "static"
 #endif
 
-    Platform::Platform(const tai_service_method_table_t * services) : tai::Platform(services) {
+    Platform::Platform(const tai_service_method_table_t * services) : tai::framework::Platform(services) {
         auto pa = std::getenv(PLATFORM_ADAPTER.c_str());
         std::string pa_name;
         if ( pa == nullptr ) {
@@ -47,7 +47,7 @@ namespace tai::mux {
     }
 
     tai_status_t Platform::create(tai_object_type_t type, tai_object_id_t module_id, uint32_t count, const tai_attribute_t * const list, tai_object_id_t *id) {
-        std::shared_ptr<tai::BaseObject> obj;
+        std::shared_ptr<tai::framework::BaseObject> obj;
         try {
             switch (type) {
             case TAI_OBJECT_TYPE_MODULE:
@@ -172,7 +172,7 @@ namespace tai::mux {
         return TAI_STATUS_SUCCESS;
     }
 
-    template <> const tai::AttributeInfoMap<TAI_OBJECT_TYPE_MODULE> tai::Config<TAI_OBJECT_TYPE_MODULE>::m_info {};
+    template <> const AttributeInfoMap<TAI_OBJECT_TYPE_MODULE> Config<TAI_OBJECT_TYPE_MODULE>::m_info {};
 
     Module::Module(uint32_t count, const tai_attribute_t *list, S_PlatformAdapter platform) : Object(platform) {
         auto mod_addr = find_attribute_in_list(TAI_MODULE_ATTR_LOCATION, count, list);
@@ -194,7 +194,7 @@ namespace tai::mux {
         }
     }
 
-    template <> const tai::AttributeInfoMap<TAI_OBJECT_TYPE_NETWORKIF> tai::Config<TAI_OBJECT_TYPE_NETWORKIF>::m_info {};
+    template <> const AttributeInfoMap<TAI_OBJECT_TYPE_NETWORKIF> Config<TAI_OBJECT_TYPE_NETWORKIF>::m_info {};
 
     NetIf::NetIf(S_Module module, uint32_t count, const tai_attribute_t *list, S_PlatformAdapter platform) : m_module(module), Object(platform) {
         m_adapter = module->adapter();
@@ -210,7 +210,7 @@ namespace tai::mux {
         }
     }
 
-    template <> const tai::AttributeInfoMap<TAI_OBJECT_TYPE_HOSTIF> tai::Config<TAI_OBJECT_TYPE_HOSTIF>::m_info {};
+    template <> const AttributeInfoMap<TAI_OBJECT_TYPE_HOSTIF> Config<TAI_OBJECT_TYPE_HOSTIF>::m_info {};
 
     HostIf::HostIf(S_Module module, uint32_t count, const tai_attribute_t *list, S_PlatformAdapter platform) : m_module(module), Object(platform) {
         m_adapter = module->adapter();

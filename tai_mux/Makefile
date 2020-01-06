@@ -5,7 +5,11 @@ ifndef TAI_DIR
 endif
 
 ifndef TAI_LIB_DIR
-    TAI_LIB_DIR := $(TAI_DIR)/tools/framework
+    TAI_LIB_DIR := $(TAI_DIR)/tools/lib
+endif
+
+ifndef TAI_FRAMEWORK_DIR
+    TAI_FRAMEWORK_DIR := $(TAI_DIR)/tools/framework
 endif
 
 ifndef TAI_META_LIBRARY
@@ -16,15 +20,19 @@ ifndef TAI_DOCKER_CMD
     TAI_DOCKER_CMD := bash
 endif
 
+ifndef TAI_MUX_BUILDDIR
+    TAI_MUX_BUILDDIR := build
+endif
+
 CFLAGS := -std=c++17 -g3 -shared -fPIC -DTAI_EXPOSE_PLATFORM -fno-gnu-unique
 
-INCLUDES := -I $(TAI_DIR)/inc -I $(TAI_DIR)/meta -I $(TAI_LIB_DIR) -include mux.hpp
+INCLUDES := -I $(TAI_DIR)/inc -I $(TAI_DIR)/meta -I $(TAI_LIB_DIR) -I $(TAI_FRAMEWORK_DIR) -include mux.hpp
 
-BUILDDIR := build
-SOURCES := $(wildcard *.cpp) $(wildcard $(TAI_LIB_DIR)/*.cpp)
-HEADERS := $(wildcard *.hpp) $(wildcard $(TAI_LIB_DIR)/*.hpp)
-OBJECTS := $(addprefix build/,$(SOURCES:%.cpp=%.o))
-DEPS := $(addprefix build/,$(SOURCES:%.cpp=%.d))
+BUILDDIR := $(TAI_MUX_BUILDDIR)
+SOURCES := $(wildcard *.cpp $(TAI_LIB_DIR)/*.cpp $(TAI_FRAMEWORK_DIR)/*.cpp)
+HEADERS := $(wildcard *.hpp $(TAI_LIB_DIR)/*.hpp $(TAI_FRAMEWORK_DIR)/*.hpp)
+OBJECTS := $(addprefix $(BUILDDIR)/,$(SOURCES:%.cpp=%.o))
+DEPS := $(addprefix $(BUILDDIR)/,$(SOURCES:%.cpp=%.d))
 
 all: $(PROG)
 
@@ -36,7 +44,7 @@ $(TAI_META_LIBRARY):
 
 $(BUILDDIR)/%.o: %.cpp Makefile
 	mkdir -p $(@D)
-	$(CXX) $(CFLAGS) $(INCLUDES) -c $< -MMD -MP -MF build/$*.d -o $@
+	$(CXX) $(CFLAGS) $(INCLUDES) -c $< -MMD -MP -MF $(BUILDDIR)/$*.d -o $@
 
 -include $(DEPS)
 
