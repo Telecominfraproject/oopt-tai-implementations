@@ -21,6 +21,10 @@ namespace tai::mux {
             ~ModuleAdapter();
             static uint64_t dl_address(const std::string& name);
 
+            std::string name() const {
+                return m_name;
+            }
+
             tai_status_t tai_api_initialize(uint64_t flags, const tai_service_method_table_t* services) {
                 return m_tai_api_initialize(flags, services);
             }
@@ -192,7 +196,7 @@ namespace tai::mux {
 
         private:
             void* m_dl;
-            const std::string& m_name;
+            const std::string m_name;
             tai_api_initialize_fn    m_tai_api_initialize;
             tai_api_uninitialize_fn  m_tai_api_uninitialize;
             tai_api_query_fn         m_tai_api_query;

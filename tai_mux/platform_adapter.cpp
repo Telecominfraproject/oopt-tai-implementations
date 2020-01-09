@@ -1,6 +1,7 @@
 #include "platform_adapter.hpp"
 #include "module_adapter.hpp"
 #include <algorithm>
+#include <cstring>
 
 namespace tai::mux {
 
@@ -181,4 +182,69 @@ namespace tai::mux {
         }
         return TAI_STATUS_SUCCESS;
     }
+
+    tai_status_t PlatformAdapter::get_mux_attribute(const tai_object_type_t& type, const tai_object_id_t& id, tai_attribute_t* const attr) {
+        S_ModuleAdapter adapter;
+        tai_object_id_t real_id;
+        if ( get_mapping(id, &adapter, &real_id) != 0 ) {
+            return TAI_STATUS_FAILURE;
+        }
+        switch (type) {
+        case TAI_OBJECT_TYPE_MODULE:
+            switch (attr->id) {
+            case TAI_MODULE_ATTR_MUX_PLATFORM_ADAPTER_TYPE:
+                attr->value.u32 = this->type();
+                break;
+            case TAI_MODULE_ATTR_MUX_CURRENT_LOADED_TAI_LIBRARY:
+                {
+                    auto n = adapter->name();
+                    auto v = attr->value.charlist.count;
+                    attr->value.charlist.count = n.size() + 1;
+                    if ( v < (n.size() + 1) ) {
+                        return TAI_STATUS_BUFFER_OVERFLOW;
+                    }
+                    std::strncpy(attr->value.charlist.list, n.c_str(), v);
+                    break;
+                }
+            case TAI_MODULE_ATTR_MUX_REAL_OID:
+                attr->value.oid = real_id;
+                break;
+            default:
+                return TAI_STATUS_ATTR_NOT_SUPPORTED_0;
+            }
+            break;
+        case TAI_OBJECT_TYPE_NETWORKIF:
+            switch (attr->id) {
+            case TAI_NETWORK_INTERFACE_ATTR_MUX_REAL_OID:
+                attr->value.oid = real_id;
+                break;
+            default:
+                return TAI_STATUS_ATTR_NOT_SUPPORTED_0;
+            }
+            break;
+        case TAI_OBJECT_TYPE_HOSTIF:
+            switch (attr->id) {
+            case TAI_HOST_INTERFACE_ATTR_MUX_REAL_OID:
+                attr->value.oid = real_id;
+                break;
+            default:
+                return TAI_STATUS_ATTR_NOT_SUPPORTED_0;
+            }
+            break;
+        default:
+            return TAI_STATUS_NOT_SUPPORTED;
+        }
+        return TAI_STATUS_SUCCESS;
+    }
+
+    tai_status_t PlatformAdapter::set_mux_attribute(const tai_object_type_t& type, const tai_object_id_t& id, const tai_attribute_t* const attribute, tai::framework::FSMState* state) {
+        S_ModuleAdapter adapter;
+        tai_object_id_t real_id;
+        if ( get_mapping(id, &adapter, &real_id) != 0 ) {
+            return TAI_STATUS_FAILURE;
+        }
+        return TAI_STATUS_NOT_SUPPORTED;
+    }
+
+
 }

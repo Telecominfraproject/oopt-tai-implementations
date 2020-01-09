@@ -33,6 +33,10 @@ namespace tai::mux {
                 }
                 return set;
             };
+
+            virtual tai_mux_platform_adapter_type_t type() const  {
+                return TAI_MUX_PLATFORM_ADAPTER_TYPE_STATIC;
+            }
         private:
             std::map<std::string, S_ModuleAdapter> m_ma_map;
             std::thread m_th;
