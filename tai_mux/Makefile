@@ -34,13 +34,17 @@ HEADERS := $(wildcard *.hpp $(TAI_LIB_DIR)/*.hpp $(TAI_FRAMEWORK_DIR)/*.hpp)
 OBJECTS := $(addprefix $(BUILDDIR)/,$(SOURCES:%.cpp=%.o))
 DEPS := $(addprefix $(BUILDDIR)/,$(SOURCES:%.cpp=%.d))
 
+.PHONY = all meta test cmd docker docker-image bash clean clean-all
+
 all: $(PROG)
 
 $(PROG): $(TAI_META_LIBRARY) $(OBJECTS) $(HEADERS)
 	$(CXX) $(CFLAGS) $(INCLUDES) -shared $(OBJECTS) -o $@ -ldl -lpthread -L $(dir $(TAI_META_LIBRARY)) -lmetatai
 
-$(TAI_META_LIBRARY):
-	$(MAKE) -C $(@D)
+$(TAI_META_LIBRARY): $(wildcard custom_attrs/*)
+	TAI_META_CUSTOM_FILES="$(abspath $(wildcard custom_attrs/*))" $(MAKE) -C $(@D)
+
+meta: $(TAI_META_LIBRARY)
 
 $(BUILDDIR)/%.o: %.cpp Makefile
 	mkdir -p $(@D)

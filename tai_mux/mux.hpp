@@ -38,15 +38,25 @@ namespace tai::mux {
     using S_ConstNetIf  = std::shared_ptr<const NetIf>;
     using S_ConstHostIf = std::shared_ptr<const HostIf>;
 
+    struct context {
+        S_PlatformAdapter pa;
+        tai_object_id_t oid;
+        tai_object_type_t type;
+    };
+
+    tai_status_t attribute_getter(tai_attribute_t* const attribute, void* user);
+    tai_status_t attribute_setter(const tai_attribute_t* const attribute, FSMState* state, void* user);
+
     template<tai_object_type_t T>
     class Object : public tai::framework::Object<T> {
         public:
-            Object(S_PlatformAdapter pa) : m_pa(pa), tai::framework::Object<T>(0, nullptr, std::make_shared<tai::framework::FSM>(), nullptr,
+            Object(S_PlatformAdapter pa) : m_context{pa}, tai::framework::Object<T>(0, nullptr, std::make_shared<tai::framework::FSM>(),
+                    reinterpret_cast<void*>(&m_context),
                     std::bind(&Object::default_setter, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, std::placeholders::_5),
                     std::bind(&Object::default_getter, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4)) {}
 
             tai_object_id_t id() const {
-                return m_id;
+                return m_context.oid;
             }
 
             tai_object_id_t real_id() const {
@@ -54,15 +64,18 @@ namespace tai::mux {
             }
 
         protected:
-            tai_object_id_t m_id, m_real_id;
-            S_PlatformAdapter m_pa;
+            tai_object_id_t m_real_id;
+            context m_context;
             S_ModuleAdapter m_adapter;
         private:
             tai_status_t default_setter(uint32_t count, const tai_attribute_t* const attribute, FSMState* fsm, void* const user, const tai::framework::error_info* const info) {
-                return m_pa->set(T, id(), count, attribute);
+                return m_context.pa->set(T, id(), count, attribute);
             }
             tai_status_t default_getter(uint32_t count, tai_attribute_t* const attribute, void* const user, const tai::framework::error_info* const info) {
-                return m_pa->get(T, id(), count, attribute);
+                auto ret = m_context.pa->get(T, id(), count, attribute);
+                if ( ret != TAI_STATUS_SUCCESS ) {
+                }
+                return ret;
             }
     };
 

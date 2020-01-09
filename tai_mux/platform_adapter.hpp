@@ -12,6 +12,8 @@
 #include "attribute.hpp"
 #include "logger.hpp"
 
+#include "fsm.hpp"
+
 namespace tai::mux {
 
     class ModuleAdapter;
@@ -31,11 +33,6 @@ namespace tai::mux {
     };
 
     using S_NotificationContext = std::shared_ptr<NotificationContext>;
-
-    enum platform_adapter_t {
-        PLATFORM_ADAPTER_UNKNOWN,
-        PLATFORM_ADAPTER_STATIC,
-    };
 
     static const int TAI_MUX_NUM_MAX_OBJECT = 256;
 
@@ -66,6 +63,8 @@ namespace tai::mux {
             virtual const std::unordered_set<S_ModuleAdapter> list_module_adapters() = 0;
             PlatformAdapter(){}
             virtual ~PlatformAdapter(){}
+
+            virtual tai_mux_platform_adapter_type_t type() const = 0;
 
             int get_mapping(const tai_object_id_t& id, S_ModuleAdapter *adapter, tai_object_id_t *real_id) {
                 if ( m_map.find(id) == m_map.end() ) {
@@ -113,6 +112,9 @@ namespace tai::mux {
 
             tai_status_t get(const tai_object_type_t& type, const tai_object_id_t& id, uint32_t count, tai_attribute_t* const attrs);
             tai_status_t set(const tai_object_type_t& type, const tai_object_id_t& id, uint32_t count, const tai_attribute_t* const attrs);
+
+            virtual tai_status_t get_mux_attribute(const tai_object_type_t& type, const tai_object_id_t& oid, tai_attribute_t* const attribute);
+            virtual tai_status_t set_mux_attribute(const tai_object_type_t& type, const tai_object_id_t& oid, const tai_attribute_t* const attribute, tai::framework::FSMState* state);
 
         private:
             PlatformAdapter(const PlatformAdapter&){}

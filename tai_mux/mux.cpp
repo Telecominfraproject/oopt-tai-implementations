@@ -32,12 +32,12 @@ namespace tai::mux {
         } else {
             pa_name = std::string(pa);
         }
-        platform_adapter_t pa_kind;
+        tai_mux_platform_adapter_type_t pa_type;
         if ( pa_name == "static" ) {
-            pa_kind = PLATFORM_ADAPTER_STATIC;
+            pa_type = TAI_MUX_PLATFORM_ADAPTER_TYPE_STATIC;
         }
-        switch ( pa_kind ) {
-        case PLATFORM_ADAPTER_STATIC:
+        switch ( pa_type ) {
+        case TAI_MUX_PLATFORM_ADAPTER_TYPE_STATIC:
             m_pa = std::make_shared<StaticPlatformAdapter>(0, services);
             break;
         default:
@@ -172,7 +172,30 @@ namespace tai::mux {
         return TAI_STATUS_SUCCESS;
     }
 
-    template <> const AttributeInfoMap<TAI_OBJECT_TYPE_MODULE> Config<TAI_OBJECT_TYPE_MODULE>::m_info {};
+    tai_status_t attribute_getter(tai_attribute_t* const attribute, void* user) {
+        auto ctx = reinterpret_cast<context*>(user);
+        auto pa = ctx->pa;
+        return pa->get_mux_attribute(ctx->type, ctx->oid, attribute);
+    }
+
+    tai_status_t attribute_setter(const tai_attribute_t* const attribute, FSMState* state, void* user) {
+        auto ctx = reinterpret_cast<context*>(user);
+        auto pa = ctx->pa;
+        return pa->set_mux_attribute(ctx->type, ctx->oid, attribute, state);
+    }
+
+    using M = AttributeInfo<TAI_OBJECT_TYPE_MODULE>;
+    using N = AttributeInfo<TAI_OBJECT_TYPE_NETWORKIF>;
+    using H = AttributeInfo<TAI_OBJECT_TYPE_HOSTIF>;
+
+    template <> const AttributeInfoMap<TAI_OBJECT_TYPE_MODULE> Config<TAI_OBJECT_TYPE_MODULE>::m_info {
+        mux::M(TAI_MODULE_ATTR_MUX_PLATFORM_ADAPTER_TYPE)
+            .set_getter(&mux::attribute_getter),
+        mux::M(TAI_MODULE_ATTR_MUX_CURRENT_LOADED_TAI_LIBRARY)
+            .set_getter(&mux::attribute_getter),
+        mux::M(TAI_MODULE_ATTR_MUX_REAL_OID)
+            .set_getter(&mux::attribute_getter),
+    };
 
     Module::Module(uint32_t count, const tai_attribute_t *list, S_PlatformAdapter platform) : Object(platform) {
         auto mod_addr = find_attribute_in_list(TAI_MODULE_ATTR_LOCATION, count, list);
@@ -180,7 +203,7 @@ namespace tai::mux {
             throw Exception(TAI_STATUS_MANDATORY_ATTRIBUTE_MISSING);
         }
         const std::string location(mod_addr->charlist.list, mod_addr->charlist.count);
-        auto adapter = m_pa->get_module_adapter(location);
+        auto adapter = m_context.pa->get_module_adapter(location);
         if ( adapter == nullptr ) {
             throw Exception(TAI_STATUS_FAILURE);
         }
@@ -189,12 +212,16 @@ namespace tai::mux {
         if ( ret != TAI_STATUS_SUCCESS ) {
             throw Exception(ret);
         }
-        if ( platform->create_mapping(&m_id, m_adapter, m_real_id) != 0 ) {
+        if ( platform->create_mapping(&m_context.oid, m_adapter, m_real_id) != 0 ) {
             throw Exception(TAI_STATUS_FAILURE);
         }
+        m_context.type = TAI_OBJECT_TYPE_MODULE;
     }
 
-    template <> const AttributeInfoMap<TAI_OBJECT_TYPE_NETWORKIF> Config<TAI_OBJECT_TYPE_NETWORKIF>::m_info {};
+    template <> const AttributeInfoMap<TAI_OBJECT_TYPE_NETWORKIF> Config<TAI_OBJECT_TYPE_NETWORKIF>::m_info {
+        mux::N(TAI_NETWORK_INTERFACE_ATTR_MUX_REAL_OID)
+            .set_getter(&mux::attribute_getter),
+    };
 
     NetIf::NetIf(S_Module module, uint32_t count, const tai_attribute_t *list, S_PlatformAdapter platform) : m_module(module), Object(platform) {
         m_adapter = module->adapter();
@@ -205,12 +232,16 @@ namespace tai::mux {
         if ( ret != TAI_STATUS_SUCCESS ) {
             throw Exception(ret);
         }
-        if ( platform->create_mapping(&m_id, m_adapter, m_real_id) != 0 ) {
+        if ( platform->create_mapping(&m_context.oid, m_adapter, m_real_id) != 0 ) {
             throw Exception(TAI_STATUS_FAILURE);
         }
+        m_context.type = TAI_OBJECT_TYPE_NETWORKIF;
     }
 
-    template <> const AttributeInfoMap<TAI_OBJECT_TYPE_HOSTIF> Config<TAI_OBJECT_TYPE_HOSTIF>::m_info {};
+    template <> const AttributeInfoMap<TAI_OBJECT_TYPE_HOSTIF> Config<TAI_OBJECT_TYPE_HOSTIF>::m_info {
+        mux::H(TAI_HOST_INTERFACE_ATTR_MUX_REAL_OID)
+            .set_getter(&mux::attribute_getter),
+    };
 
     HostIf::HostIf(S_Module module, uint32_t count, const tai_attribute_t *list, S_PlatformAdapter platform) : m_module(module), Object(platform) {
         m_adapter = module->adapter();
@@ -221,8 +252,9 @@ namespace tai::mux {
         if ( ret != TAI_STATUS_SUCCESS ) {
             throw Exception(ret);
         }
-        if ( platform->create_mapping(&m_id, m_adapter, m_real_id) != 0 ) {
+        if ( platform->create_mapping(&m_context.oid, m_adapter, m_real_id) != 0 ) {
             throw Exception(TAI_STATUS_FAILURE);
         }
+        m_context.type = TAI_OBJECT_TYPE_HOSTIF;
     }
 };
