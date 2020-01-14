@@ -21,6 +21,9 @@ namespace tai::mux {
         auto c = json::parse(config);
 
         m_services.module_presence = nullptr;
+        if ( services != nullptr ) {
+            m_services.get_module_io_handler = services->get_module_io_handler;
+        }
 
         for ( json::iterator it = c.begin(); it != c.end(); ++it ) {
             auto location = it.key();
