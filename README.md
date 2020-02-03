@@ -15,6 +15,7 @@ build instructions. The repo currently contains the following components:
 
 * tai_ac400 - The TAI adapter code for the Acacia AC400 module
 * tai_mux - A TAI adapter which multiplexes access to multiple, possible different, TAI adapters.
+* tai_sff - A TAI adapter code for SFF transceiver
 
 For more information about:
 * TAI: https://github.com/Telecominfraproject/oopt-tai
