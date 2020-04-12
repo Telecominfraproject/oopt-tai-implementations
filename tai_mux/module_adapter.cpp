@@ -45,6 +45,7 @@ namespace tai::mux {
     }
 
     ModuleAdapter::~ModuleAdapter() {
+		tai_api_uninitialize();
         dlclose(m_dl);
     }
 

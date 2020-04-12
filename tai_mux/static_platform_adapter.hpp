@@ -23,9 +23,8 @@ namespace tai::mux {
         public:
             StaticPlatformAdapter(uint64_t flags, const tai_service_method_table_t* services);
             ~StaticPlatformAdapter();
-            S_ModuleAdapter get_module_adapter(const std::string& location) {
-                return m_ma_map[location];
-            };
+            S_ModuleAdapter get_module_adapter(const std::string& location); 
+            
             const std::unordered_set<S_ModuleAdapter> list_module_adapters() {
                 std::unordered_set<S_ModuleAdapter> set;
                 for ( auto m : m_ma_map ) {

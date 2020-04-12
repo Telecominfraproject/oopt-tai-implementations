@@ -194,6 +194,10 @@ namespace tai::mux {
                 return m_hostif_api->clear_host_interface_attributes(host_interface_id, attr_count, attr_list);
             }
 
+	    bool match_m_dl(uint64_t dl) {
+			return dl == (uint64_t)m_dl;
+	    }
+
         private:
             void* m_dl;
             const std::string m_name;
