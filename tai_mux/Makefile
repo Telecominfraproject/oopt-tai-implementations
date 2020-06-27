@@ -24,6 +24,10 @@ ifndef TAI_MUX_BUILDDIR
     TAI_MUX_BUILDDIR := build
 endif
 
+ifndef TAI_DOCKER_RUN_OPTION
+    TAI_DOCKER_RUN_OPTION := -it --rm
+endif
+
 CFLAGS := -std=c++17 -g3 -shared -fPIC -DTAI_EXPOSE_PLATFORM -fno-gnu-unique
 
 INCLUDES := -I $(TAI_DIR)/inc -I $(TAI_DIR)/meta -I $(TAI_LIB_DIR) -I $(TAI_FRAMEWORK_DIR) -include mux.hpp
@@ -56,7 +60,7 @@ test:
 	$(MAKE) -C tests
 
 cmd:
-	TAI_DOCKER_CMD="$(TAI_DOCKER_CMD)" TAI_DOCKER_RUN_OPTION="--privileged --net=host -it --rm" TAI_DOCKER_MOUNT="`pwd`:/data" $(MAKE) -C $(TAI_DIR) $@
+	TAI_DOCKER_MOUNT="`pwd`:/data" $(MAKE) -C $(TAI_DIR) $@
 
 docker:
 	TAI_DOCKER_CMD="make" $(MAKE) cmd
