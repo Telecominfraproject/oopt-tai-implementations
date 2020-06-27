@@ -34,7 +34,7 @@ HEADERS := $(wildcard *.hpp $(TAI_LIB_DIR)/*.hpp $(TAI_FRAMEWORK_DIR)/*.hpp)
 OBJECTS := $(addprefix $(BUILDDIR)/,$(SOURCES:%.cpp=%.o))
 DEPS := $(addprefix $(BUILDDIR)/,$(SOURCES:%.cpp=%.d))
 
-.PHONY = all meta test cmd docker docker-image bash clean clean-all
+.PHONY = all meta test cmd docker builder bash clean clean-all
 
 all: $(PROG)
 
@@ -61,7 +61,7 @@ cmd:
 docker:
 	TAI_DOCKER_CMD="make" $(MAKE) cmd
 
-docker-image:
+builder:
 	$(MAKE) -C $(TAI_DIR) $@
 
 bash:
