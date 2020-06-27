@@ -27,7 +27,7 @@ namespace tai::mux {
             auto dst = std::make_shared<Attribute>(meta, src);
             auto ret = convert_oid(ctx->object_type, oid, dst, dst, true);
             if ( ret != TAI_STATUS_SUCCESS ) {
-                ERROR("failed to convert oid of attribute: %d", src.id);
+                TAI_ERROR("failed to convert oid of attribute: %d", src.id);
                 continue;
             }
             attrs.emplace_back(dst);

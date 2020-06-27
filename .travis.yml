@@ -6,7 +6,7 @@ services:
   - docker
 
 before_install:
-  - make -C tai_mux docker-image
+  - make -C tai_mux builder
 
 script:
   - TAI_DOCKER_CMD='make test' make -C tai_mux cmd
