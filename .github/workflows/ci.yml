@@ -1,0 +1,16 @@
+name: ci
+
+on:
+    pull_request:
+        branches:
+        - master
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        steps:
+        - uses: crazy-max/ghaction-docker-buildx@v1
+          with:
+              version: latest
+        - uses: actions/checkout@v2
+        - run: make -C tai_mux builder
+        - run: TAI_DOCKER_CMD='make test' make -C tai_mux image
