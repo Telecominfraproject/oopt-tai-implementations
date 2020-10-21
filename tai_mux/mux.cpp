@@ -41,7 +41,7 @@ namespace tai::mux {
             m_pa = std::make_shared<StaticPlatformAdapter>(0, services);
             break;
         default:
-            ERROR("unsupported platform_adapter: %s", pa_name.c_str());
+            TAI_ERROR("unsupported platform_adapter: %s", pa_name.c_str());
             throw Exception(TAI_STATUS_NOT_SUPPORTED);
         }
     }
