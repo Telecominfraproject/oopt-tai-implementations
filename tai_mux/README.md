@@ -16,7 +16,9 @@ modules and decides which `libtai.so` to use for detected modules.
 platform adapter. User can choose which platform adapter to use by
 passing an environment variable `TAI_MUX_PLATFORM_ADAPTER`.
 
-Currently, only `static` platform adapter is supported.
+Currently, `static` platform adapter and `exec` platform adapter is supported.
+
+By default, `TAI_MUX_PLATFORM_ADAPTER` is set to `static`.
 
 #### static platform adapter
 
@@ -47,6 +49,24 @@ is 5,6,7,8.
 
 An environment variable `TAI_MUX_STATIC_CONFIG_FILE` is used to let the
 static platform adapter know the location of the configuration file.
+
+#### exec platform adapter
+
+exec platform adapter is a platform adapter which executes a prespecified script.
+
+User can choose what script to execute by using an environment variable `TAI_MUX_EXEC_SCRIPT`.
+
+By default, `TAI_MUX_EXEC_SCRIPT` is set to `/etc/tai/mux/exec.sh`.
+
+exec platform adapter executes this script in two ways.
+
+The first way is to get the list of modules during the initialization phase.
+In this case, exec platform adapter passes 'list' as the first argument.
+The script must return the list of modules which is separated by a newline, or "\n".
+
+The second way is to get the actual TAI library to use for a module when TAI adapter host tries to create a module.
+In this case, exec platform adapter passes the module location as the first argument.
+The script must return the TAI library name. If the module doesn't exist in the specified location, the script must exit with non-zero value.
 
 ### HOW TO BUILD
 

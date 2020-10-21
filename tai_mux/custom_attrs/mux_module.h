@@ -7,6 +7,7 @@ typedef enum _tai_mux_platform_adapter_type_t
 {
     TAI_MUX_PLATFORM_ADAPTER_TYPE_UNKNOWN,
     TAI_MUX_PLATFORM_ADAPTER_TYPE_STATIC,
+    TAI_MUX_PLATFORM_ADAPTER_TYPE_EXEC,
     TAI_MUX_PLATFORM_ADAPTER_TYPE_MAX,
 } tai_mux_platform_adapter_type_t;
 
