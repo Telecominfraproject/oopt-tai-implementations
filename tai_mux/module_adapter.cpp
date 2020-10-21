@@ -14,6 +14,7 @@ namespace tai::mux {
     ModuleAdapter::ModuleAdapter(const std::string& name, uint64_t flags, const tai_service_method_table_t* services) : m_name(name) {
         m_dl = dlopen(name.c_str(), RTLD_NOW | RTLD_DEEPBIND);
         if ( m_dl == nullptr ) {
+            TAI_ERROR("dlerror: %s", dlerror());
             throw std::runtime_error(dlerror());
         }
         LOAD_TAI_API(tai_api_initialize)

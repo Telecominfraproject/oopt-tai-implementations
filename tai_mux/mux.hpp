@@ -3,7 +3,6 @@
 
 #include <string>
 #include "platform_adapter.hpp"
-#include "static_platform_adapter.hpp"
 #include "module_adapter.hpp"
 #include "tai.h"
 #include <mutex>

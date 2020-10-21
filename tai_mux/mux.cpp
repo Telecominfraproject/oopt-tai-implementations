@@ -1,6 +1,8 @@
 #include "mux.hpp"
 #include <iostream>
 #include "taimetadata.h"
+#include "static_platform_adapter.hpp"
+#include "exec_platform_adapter.hpp"
 
 namespace tai::mux {
 
@@ -35,10 +37,15 @@ namespace tai::mux {
         tai_mux_platform_adapter_type_t pa_type;
         if ( pa_name == "static" ) {
             pa_type = TAI_MUX_PLATFORM_ADAPTER_TYPE_STATIC;
+        } else if ( pa_name == "exec" ) {
+            pa_type = TAI_MUX_PLATFORM_ADAPTER_TYPE_EXEC;
         }
         switch ( pa_type ) {
         case TAI_MUX_PLATFORM_ADAPTER_TYPE_STATIC:
             m_pa = std::make_shared<StaticPlatformAdapter>(0, services);
+            break;
+        case TAI_MUX_PLATFORM_ADAPTER_TYPE_EXEC:
+            m_pa = std::make_shared<ExecPlatformAdapter>(0, services);
             break;
         default:
             TAI_ERROR("unsupported platform_adapter: %s", pa_name.c_str());
@@ -162,6 +169,10 @@ namespace tai::mux {
     }
 
     tai_status_t Platform::set_log(tai_api_t api, tai_log_level_t level, tai_log_fn log_fn) {
+        auto ret = tai::Logger::get_instance().set_log(api, level, log_fn);
+        if ( ret != TAI_STATUS_SUCCESS ) {
+            return ret;
+        }
         auto set = m_pa->list_module_adapters();
         for ( const auto& a :  set ) {
             auto ret = a->tai_log_set(api, level, log_fn);
