@@ -77,8 +77,13 @@ namespace tai::mux {
             TAI_ERROR("script failed: %d", ret);
             return nullptr;
         }
+        if ( lib == "" ) {
+            TAI_ERROR("no library found");
+            return nullptr;
+        }
         auto dl = ModuleAdapter::dl_address(lib);
         S_ModuleAdapter ma;
+        TAI_DEBUG("dl: %p, lib: %s", dl, lib.c_str());
         if ( dl == 0 ) {
             ma = std::make_shared<ModuleAdapter>(lib, m_flags, &m_services);
             dl = ModuleAdapter::dl_address(lib);
