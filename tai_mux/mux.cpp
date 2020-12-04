@@ -58,7 +58,7 @@ namespace tai::mux {
         try {
             switch (type) {
             case TAI_OBJECT_TYPE_MODULE:
-                obj = std::make_shared<Module>(count, list, m_pa);
+                obj = std::make_shared<Module>(count, list, m_pa, m_log_setting);
                 break;
             case TAI_OBJECT_TYPE_NETWORKIF:
             case TAI_OBJECT_TYPE_HOSTIF:
@@ -180,6 +180,7 @@ namespace tai::mux {
                 return ret;
             }
         }
+        m_log_setting[api] = {level, log_fn};
         return TAI_STATUS_SUCCESS;
     }
 
@@ -208,7 +209,7 @@ namespace tai::mux {
             .set_getter(&mux::attribute_getter),
     };
 
-    Module::Module(uint32_t count, const tai_attribute_t *list, S_PlatformAdapter platform) : Object(platform) {
+    Module::Module(uint32_t count, const tai_attribute_t *list, S_PlatformAdapter platform, const log_setting& log_setting) : Object(platform) {
         auto mod_addr = find_attribute_in_list(TAI_MODULE_ATTR_LOCATION, count, list);
         if ( mod_addr == nullptr ) {
             throw Exception(TAI_STATUS_MANDATORY_ATTRIBUTE_MISSING);
@@ -217,6 +218,12 @@ namespace tai::mux {
         auto adapter = m_context.pa->get_module_adapter(location);
         if ( adapter == nullptr ) {
             throw Exception(TAI_STATUS_FAILURE);
+        }
+        for (auto const& v : log_setting) {
+            auto ret = adapter->tai_log_set(v.first, v.second.first, v.second.second);
+            if ( ret != TAI_STATUS_SUCCESS ) {
+                throw Exception(ret);
+            }
         }
         m_adapter = adapter;
         auto ret = m_adapter->create_module(&m_real_id, count, list);

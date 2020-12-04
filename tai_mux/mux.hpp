@@ -12,6 +12,7 @@
 namespace tai::mux {
 
     using namespace tai::framework;
+    using log_setting = std::map<tai_api_t, std::pair<tai_log_level_t, tai_log_fn>>;
 
     class Platform : public tai::framework::Platform {
         public:
@@ -23,6 +24,7 @@ namespace tai::mux {
             tai_status_t      set_log(tai_api_t tai_api_id, tai_log_level_t log_level, tai_log_fn log_fn);
         private:
             S_PlatformAdapter m_pa;
+            log_setting m_log_setting;
     };
 
     class Module;
@@ -80,7 +82,7 @@ namespace tai::mux {
 
     class Module : public Object<TAI_OBJECT_TYPE_MODULE> {
         public:
-            Module(uint32_t count, const tai_attribute_t *list, S_PlatformAdapter platform);
+            Module(uint32_t count, const tai_attribute_t *list, S_PlatformAdapter platform, const log_setting& log_setting);
 
             S_ModuleAdapter adapter() const {
                 return m_adapter;
