@@ -61,7 +61,7 @@ cmd:
 docker:
 	TAI_DOCKER_CMD="make" $(MAKE) cmd
 
-docker-image:
+builder:
 	$(MAKE) -C $(TAI_DIR) $@
 
 bash:

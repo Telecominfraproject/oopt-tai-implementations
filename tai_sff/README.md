@@ -74,7 +74,7 @@ module(/sys/bus/i2c/devices/18-0050)/netif(0)>
 
 ```
 $ git submodule update --init
-$ make docker-image
+$ make builder
 $ make docker
 ```
 
