@@ -101,7 +101,7 @@ namespace tai::sff {
                 return TAI_STATUS_OBJECT_IN_USE;
             }
         }
-        transite(FSM_STATE_END);
+        transit(FSM_STATE_END);
         while(true) {
             auto s = get_state();
             if ( s == FSM_STATE_END ) {
