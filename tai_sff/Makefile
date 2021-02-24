@@ -56,7 +56,7 @@ test:
 	$(MAKE) -C tests
 
 cmd:
-	TAI_DOCKER_CMD="$(TAI_DOCKER_CMD)" TAI_DOCKER_RUN_OPTION="--privileged --net=host -it --rm" TAI_DOCKER_MOUNT="`pwd`:/data" $(MAKE) -C $(TAI_DIR) $@
+	TAI_DOCKER_CMD="$(TAI_DOCKER_CMD)" TAI_DOCKER_RUN_OPTION="--privileged --net=host --rm" TAI_DOCKER_MOUNT="`pwd`:/data" $(MAKE) -C $(TAI_DIR) $@
 
 docker:
 	TAI_DOCKER_CMD="make" $(MAKE) cmd
@@ -66,6 +66,8 @@ builder:
 
 bash:
 	$(MAKE) cmd
+
+ci: builder docker
 
 clean:
 	$(RM) -r $(BUILDDIR) $(TARGET)

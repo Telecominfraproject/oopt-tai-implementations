@@ -71,6 +71,9 @@ builder:
 bash:
 	$(MAKE) cmd
 
+ci: builder
+	TAI_DOCKER_RUN_OPTION='--rm' TAI_DOCKER_CMD='make test' $(MAKE) cmd
+
 clean:
 	$(RM) -r $(BUILDDIR) $(TARGET)
 
