@@ -12,5 +12,5 @@ jobs:
         - uses: actions/checkout@v2
           with:
               submodules: true
-        - run: make -C tai_mux builder
-        - run: TAI_DOCKER_RUN_OPTION='--rm' TAI_DOCKER_CMD='make test' make -C tai_mux cmd
+        - run: make -C tai_mux ci
+        - run: make -C tai_sff ci
