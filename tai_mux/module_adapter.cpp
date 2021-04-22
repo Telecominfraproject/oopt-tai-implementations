@@ -43,6 +43,12 @@ namespace tai::mux {
         if ( status != TAI_STATUS_SUCCESS ) {
             throw Exception(status);
         }
+
+        status = tai_api_query(TAI_API_META, (void **)(&m_meta_api));
+        if ( status != TAI_STATUS_SUCCESS ) {
+            TAI_WARN("no meta api: %s", name.c_str());
+        }
+
     }
 
     ModuleAdapter::~ModuleAdapter() {
