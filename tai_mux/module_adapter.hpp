@@ -194,6 +194,54 @@ namespace tai::mux {
                 return m_hostif_api->clear_host_interface_attributes(host_interface_id, attr_count, attr_list);
             }
 
+            tai_status_t list_metadata(
+                _In_ const tai_metadata_key_t * const key,
+                _Out_ uint32_t *count,
+                _Out_ const tai_attr_metadata_t * const **list) {
+                if ( m_meta_api == nullptr || m_meta_api->list_metadata == nullptr ) {
+                    auto type = key->type;
+                    if ( key->oid != TAI_NULL_OBJECT_ID ) {
+                        type = tai_object_type_query(key->oid);
+                    }
+                    auto info = tai_metadata_all_object_type_infos[type];
+                    if ( info == nullptr ) {
+                        *count = tai_metadata_attr_sorted_by_id_name_count;
+                        *list = tai_metadata_attr_sorted_by_id_name;
+                        return TAI_STATUS_SUCCESS;
+                    }
+                    *count = info->attrmetadatalength;
+                    *list = info->attrmetadata;
+                    return TAI_STATUS_SUCCESS;
+                }
+                // TODO list_metadata is not returning mux custom attributes
+                return m_meta_api->list_metadata(key, count, list);
+            }
+
+            const tai_attr_metadata_t* get_attr_metadata(
+                _In_ const tai_metadata_key_t * const key,
+                _In_ tai_attr_id_t attr_id) {
+                if ( m_meta_api == nullptr || m_meta_api->get_attr_metadata == nullptr || ( TAI_MODULE_ATTR_CUSTOM_MUX_START <= attr_id && attr_id <= TAI_MODULE_ATTR_CUSTOM_MUX_END )) {
+                    auto type = key->type;
+                    if ( key->oid != TAI_NULL_OBJECT_ID ) {
+                        type = tai_object_type_query(key->oid);
+                    }
+                    return tai_metadata_get_attr_metadata(type, attr_id);
+                }
+                return m_meta_api->get_attr_metadata(key, attr_id);
+            }
+
+            const tai_object_type_info_t* get_object_info(
+                _In_ const tai_metadata_key_t *const key) {
+                if ( m_meta_api == nullptr || m_meta_api->get_object_info == nullptr ) {
+                    auto type = key->type;
+                    if ( key->oid != TAI_NULL_OBJECT_ID ) {
+                        type = tai_object_type_query(key->oid);
+                    }
+                    return tai_metadata_get_object_type_info(type);
+                }
+                return m_meta_api->get_object_info(key);
+           }
+
         private:
             void* m_dl;
             const std::string m_name;
@@ -207,6 +255,7 @@ namespace tai::mux {
             tai_module_api_t*            m_module_api;
             tai_host_interface_api_t*    m_hostif_api;
             tai_network_interface_api_t* m_netif_api;
+            tai_meta_api_t*              m_meta_api;
     };
 
     using S_ModuleAdapter = std::shared_ptr<ModuleAdapter>;

@@ -1,3 +1,4 @@
 {
-    "0": "../tools/framework/examples/basic/libtai.so"
+    "0": "libtai-a.so",
+    "1": "libtai-b.so"
 }

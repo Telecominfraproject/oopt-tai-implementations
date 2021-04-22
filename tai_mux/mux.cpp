@@ -184,6 +184,71 @@ namespace tai::mux {
         return TAI_STATUS_SUCCESS;
     }
 
+    tai_status_t Platform::get_ma_and_meta_key(const tai_metadata_key_t *const key, tai_metadata_key_t& new_key, S_ModuleAdapter *ma) {
+        new_key = *key;
+        if ( key->location.count > 0 ) {
+            std::string loc(key->location.list, key->location.count);
+            *ma = m_pa->get_module_adapter(loc);
+        } else if ( key->oid != TAI_NULL_OBJECT_ID ) {
+            tai_object_id_t real_id;
+            if ( m_pa->get_mapping(key->oid, ma, &real_id) < 0 ) {
+                return TAI_STATUS_FAILURE;
+            }
+            new_key.oid = real_id;
+        }
+        return TAI_STATUS_SUCCESS;
+    }
+
+    tai_status_t Platform::list_metadata(const tai_metadata_key_t *const key, uint32_t *count, const tai_attr_metadata_t *const **list) {
+        S_ModuleAdapter ma;
+        tai_metadata_key_t new_key;
+        auto ret = get_ma_and_meta_key(key, new_key, &ma);
+        if ( ret != TAI_STATUS_SUCCESS ) {
+            return ret;
+        }
+
+        if ( ma ) {
+            return ma->list_metadata(&new_key, count, list);
+        }
+
+        auto type = key->type;
+        auto info = tai_metadata_all_object_type_infos[type];
+        if ( info == nullptr ) {
+            *count = tai_metadata_attr_sorted_by_id_name_count;
+            *list = tai_metadata_attr_sorted_by_id_name;
+            return TAI_STATUS_SUCCESS;
+        }
+        *count = info->attrmetadatalength;
+        *list = info->attrmetadata;
+        return TAI_STATUS_SUCCESS;
+    }
+
+    const tai_attr_metadata_t* Platform::get_attr_metadata(const tai_metadata_key_t *const key, tai_attr_id_t attr_id) {
+        S_ModuleAdapter ma;
+        tai_metadata_key_t new_key;
+        auto ret = get_ma_and_meta_key(key, new_key, &ma);
+        if ( ret != TAI_STATUS_SUCCESS ) {
+            return nullptr;
+        }
+        if ( ma ) {
+            return ma->get_attr_metadata(&new_key, attr_id);
+        }
+        return tai_metadata_get_attr_metadata(new_key.type, attr_id);
+    }
+
+    const tai_object_type_info_t* Platform::get_object_info(const tai_metadata_key_t *const key) {
+        S_ModuleAdapter ma;
+        tai_metadata_key_t new_key;
+        auto ret = get_ma_and_meta_key(key, new_key, &ma);
+        if ( ret != TAI_STATUS_SUCCESS ) {
+            return nullptr;
+        }
+        if ( ma ) {
+            return ma->get_object_info(&new_key);
+        }
+        return tai_metadata_get_object_type_info(key->type);
+    }
+
     tai_status_t attribute_getter(tai_attribute_t* const attribute, void* user) {
         auto ctx = reinterpret_cast<context*>(user);
         auto pa = ctx->pa;

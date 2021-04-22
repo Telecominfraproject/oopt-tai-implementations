@@ -22,7 +22,14 @@ namespace tai::mux {
             tai_object_type_t get_object_type(tai_object_id_t id);
             tai_object_id_t   get_module_id(tai_object_id_t id);
             tai_status_t      set_log(tai_api_t tai_api_id, tai_log_level_t log_level, tai_log_fn log_fn);
+
+            tai_status_t list_metadata(const tai_metadata_key_t *const key, uint32_t *count, const tai_attr_metadata_t *const **list);
+            const tai_attr_metadata_t* get_attr_metadata(const tai_metadata_key_t *const key, tai_attr_id_t attr_id);
+            const tai_object_type_info_t* get_object_info(const tai_metadata_key_t *const key);
         private:
+
+            tai_status_t get_ma_and_meta_key(const tai_metadata_key_t *const key, tai_metadata_key_t& new_key, S_ModuleAdapter *ma);
+
             S_PlatformAdapter m_pa;
             log_setting m_log_setting;
     };

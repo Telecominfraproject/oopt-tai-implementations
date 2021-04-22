@@ -18,9 +18,15 @@ namespace tai::mux {
     void PlatformAdapter::notify(NotificationContext* ctx, tai_object_id_t real_oid, uint32_t attr_count, tai_attribute_t const * const attr_list) {
         auto oid = ctx->muxed_oid;
         std::vector<S_Attribute> attrs;
+        S_ModuleAdapter adapter;
+        auto ret = get_mapping(oid, &adapter, nullptr);
+        if ( ret < 0 ) {
+            return;
+        }
         for ( int i = 0; i < attr_count; i++ ) {
             auto src = attr_list[i];
-            auto meta = tai_metadata_get_attr_metadata(ctx->object_type, src.id);
+            tai_metadata_key_t key{.oid=real_oid};
+            auto meta = adapter->get_attr_metadata(&key, src.id);
             if ( meta == nullptr ) {
                 continue;
             }
@@ -43,12 +49,18 @@ namespace tai::mux {
     }
 
     tai_status_t PlatformAdapter::convert_oid(const tai_object_type_t& type, const tai_object_id_t& id, const tai_attribute_t * const src, tai_attribute_t * const dst, bool reversed) {
-        auto meta = tai_metadata_get_attr_metadata(type, src->id);
         const tai_object_map_list_t *oml;
         S_ModuleAdapter adapter;
-        if ( get_mapping(id, &adapter, nullptr) != 0 ) {
+        tai_object_id_t real_id;
+        if ( get_mapping(id, &adapter, &real_id) != 0 ) {
             return TAI_STATUS_FAILURE;
         }
+        tai_metadata_key_t key{.oid=real_id};
+        auto meta = adapter->get_attr_metadata(&key, src->id);
+        if ( meta == nullptr ) {
+            return TAI_STATUS_FAILURE;
+        }
+
         auto convert = [&](tai_object_id_t s) -> tai_object_id_t {
             if ( reversed ) {
                 return get_reverse_mapping(s, adapter);
@@ -156,7 +168,8 @@ namespace tai::mux {
 
         for ( auto i = 0; i < count; i++ ) {
             auto attribute = &attrs[i];
-            auto meta = tai_metadata_get_attr_metadata(type, attribute->id);
+            tai_metadata_key_t key{.oid=real_id};
+            auto meta = adapter->get_attr_metadata(&key, attribute->id);
             if ( meta == nullptr ) {
                 return TAI_STATUS_FAILURE;
             }
@@ -245,6 +258,5 @@ namespace tai::mux {
         }
         return TAI_STATUS_NOT_SUPPORTED;
     }
-
 
 }
