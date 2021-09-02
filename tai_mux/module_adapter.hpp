@@ -68,6 +68,27 @@ namespace tai::mux {
                 return TAI_STATUS_NOT_SUPPORTED;
             }
 
+            tai_status_t get_capabilities(tai_object_type_t type, tai_object_id_t oid, uint32_t count, tai_attribute_capability_t *list) {
+                switch (type) {
+                case TAI_OBJECT_TYPE_MODULE:
+                    if ( m_module_api == nullptr || m_module_api->get_module_capabilities == nullptr ) {
+                        return TAI_STATUS_NOT_SUPPORTED;
+                    }
+                    return m_module_api->get_module_capabilities(oid, count, list);
+                case TAI_OBJECT_TYPE_NETWORKIF:
+                    if ( m_netif_api == nullptr || m_netif_api->get_network_interface_capabilities == nullptr ) {
+                        return TAI_STATUS_NOT_SUPPORTED;
+                    }
+                    return m_netif_api->get_network_interface_capabilities(oid, count, list);
+                case TAI_OBJECT_TYPE_HOSTIF:
+                    if ( m_hostif_api == nullptr || m_hostif_api->get_host_interface_capabilities == nullptr ) {
+                        return TAI_STATUS_NOT_SUPPORTED;
+                    }
+                    return m_hostif_api->get_host_interface_capabilities(oid, count, list);
+                }
+                return TAI_STATUS_NOT_SUPPORTED;
+            }
+
             tai_status_t create_module(
                 _Out_ tai_object_id_t          *module_id,
                 _In_ uint32_t                   attr_count,
