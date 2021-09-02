@@ -156,6 +156,15 @@ namespace tai::mux {
         return TAI_STATUS_SUCCESS;
     }
 
+    tai_status_t PlatformAdapter::get_capability(const tai_object_type_t& type, const tai_object_id_t& id, uint32_t count, tai_attribute_capability_t* const caps) {
+        S_ModuleAdapter adapter;
+        tai_object_id_t real_id;
+        if ( get_mapping(id, &adapter, &real_id) != 0 ) {
+            return TAI_STATUS_FAILURE;
+        }
+        return adapter->get_capabilities(type, real_id, count, caps);
+    }
+
     tai_status_t PlatformAdapter::set(const tai_object_type_t& type, const tai_object_id_t& id, uint32_t count, const tai_attribute_t* const attrs) {
         S_ModuleAdapter adapter;
         tai_object_id_t real_id;

@@ -61,7 +61,8 @@ namespace tai::mux {
             Object(S_PlatformAdapter pa) : m_context{pa}, tai::framework::Object<T>(0, nullptr, std::make_shared<tai::framework::FSM>(),
                     reinterpret_cast<void*>(&m_context),
                     std::bind(&Object::default_setter, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, std::placeholders::_5),
-                    std::bind(&Object::default_getter, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4)) {}
+                    std::bind(&Object::default_getter, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4),
+                    std::bind(&Object::default_cap_getter, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4)) {}
 
             tai_object_id_t id() const {
                 return m_context.oid;
@@ -80,10 +81,10 @@ namespace tai::mux {
                 return m_context.pa->set(T, id(), count, attribute);
             }
             tai_status_t default_getter(uint32_t count, tai_attribute_t* const attribute, void* const user, const tai::framework::error_info* const info) {
-                auto ret = m_context.pa->get(T, id(), count, attribute);
-                if ( ret != TAI_STATUS_SUCCESS ) {
-                }
-                return ret;
+                return m_context.pa->get(T, id(), count, attribute);
+            }
+            tai_status_t default_cap_getter(uint32_t count, tai_attribute_capability_t* const caps, void* const user, const tai::framework::error_info* const info) {
+                return m_context.pa->get_capability(T, id(), count, caps);
             }
     };
 

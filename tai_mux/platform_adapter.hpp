@@ -112,6 +112,7 @@ namespace tai::mux {
 
             tai_status_t get(const tai_object_type_t& type, const tai_object_id_t& id, uint32_t count, tai_attribute_t* const attrs);
             tai_status_t set(const tai_object_type_t& type, const tai_object_id_t& id, uint32_t count, const tai_attribute_t* const attrs);
+            tai_status_t get_capability(const tai_object_type_t& type, const tai_object_id_t& id, uint32_t count, tai_attribute_capability_t* const caps);
 
             virtual tai_status_t get_mux_attribute(const tai_object_type_t& type, const tai_object_id_t& oid, tai_attribute_t* const attribute);
             virtual tai_status_t set_mux_attribute(const tai_object_type_t& type, const tai_object_id_t& oid, const tai_attribute_t* const attribute, tai::framework::FSMState* state);
