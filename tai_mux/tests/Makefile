@@ -6,8 +6,11 @@ ifndef TAI_LIB_DIR
     TAI_LIB_DIR := $(TAI_DIR)/tools/framework
 endif
 
-all: libtai.so static.json libtai-a.so libtai-b.so
+all: exec-pa
 	TAI_MUX_STATIC_CONFIG_FILE=$(abspath static.json) TAI_TEST_TARGET=$(abspath libtai.so) $(MAKE) -C $(TAI_DIR)/tests
+
+exec-pa: libtai.so static.json libtai-a.so libtai-b.so
+	TAI_MUX_PLATFORM_ADAPTER="exec" TAI_MUX_EXEC_SCRIPT=$(abspath exec.py) LD_LIBRARY_PATH=. python -m unittest -vf
 
 libtai.so:
 	$(MAKE) -C ..
