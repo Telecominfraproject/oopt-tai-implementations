@@ -23,7 +23,7 @@ namespace tai::mux {
         if ( ret < 0 ) {
             return;
         }
-        for ( int i = 0; i < attr_count; i++ ) {
+        for (int i = 0; i < static_cast<int>(attr_count); i++) {
             auto src = attr_list[i];
             tai_metadata_key_t key{.oid=real_oid};
             auto meta = adapter->get_attr_metadata(&key, src.id);
@@ -80,7 +80,7 @@ namespace tai::mux {
             }
             break;
         case TAI_ATTR_VALUE_TYPE_OBJLIST:
-            for ( auto i = 0 ; i < src->value.objlist.count; i++ ) {
+            for (int i = 0 ; i < static_cast<int>(src->value.objlist.count); i++) {
                 dst->value.objlist.list[i] = convert(src->value.objlist.list[i]);
                 if ( dst->value.objlist.list[i] == TAI_NULL_OBJECT_ID ) {
                     return TAI_STATUS_FAILURE;
@@ -89,12 +89,12 @@ namespace tai::mux {
             break;
         case TAI_ATTR_VALUE_TYPE_OBJMAPLIST:
             oml = &src->value.objmaplist;
-            for ( auto i = 0 ; i < oml->count; i++ ) {
+            for (int i = 0 ; i < static_cast<int>(oml->count); i++) {
                 dst->value.objmaplist.list[i].key = convert(oml->list[i].key);
                 if ( dst->value.objmaplist.list[i].key == TAI_NULL_OBJECT_ID ) {
                     return TAI_STATUS_FAILURE;
                 }
-                for ( auto j = 0; j < oml->list[i].value.count; j++ ) {
+                for (int j = 0; j < static_cast<int>(oml->list[i].value.count); j++) {
                     dst->value.objmaplist.list[i].value.list[j] = convert(oml->list[i].value.list[j]);
                     if ( dst->value.objmaplist.list[i].value.list[j] == TAI_NULL_OBJECT_ID ) {
                         return TAI_STATUS_FAILURE;
@@ -132,6 +132,8 @@ namespace tai::mux {
                     // we'll clean the context after disabling the callback
                 }
             }
+        default:
+            break;
         }
         return TAI_STATUS_SUCCESS;
     }
@@ -146,7 +148,7 @@ namespace tai::mux {
         if ( ret != TAI_STATUS_SUCCESS ) {
             return ret;
         }
-        for ( auto i = 0; i < count; i++ ) {
+        for (int i = 0; i < static_cast<int>(count); i++ ) {
             auto attribute = &attrs[i];
             auto ret = convert_oid(type, id, attribute, attribute, true);
             if ( ret != TAI_STATUS_SUCCESS ) {
@@ -175,7 +177,7 @@ namespace tai::mux {
         std::vector<tai_attribute_t> inputs;
         std::vector<notification_key> keys_to_remove;
 
-        for ( auto i = 0; i < count; i++ ) {
+        for (int i = 0; i < static_cast<int>(count); i++ ) {
             auto attribute = &attrs[i];
             tai_metadata_key_t key{.oid=real_id};
             auto meta = adapter->get_attr_metadata(&key, attribute->id);

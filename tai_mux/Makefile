@@ -1,60 +1,15 @@
-PROG := libtai.so
+TAI_DIR ?= oopt-tai
+TAI_FRAMEWORK_PLATFORM_HEADER ?= mux.hpp
+TAI_PROG ?= libtai-mux.so
+TAI_META_CUSTOM_FILES ?= $(abspath $(wildcard custom_attrs/*))
+VENDOR_LDFLAGS := -ldl
 
-ifndef TAI_DIR
-    TAI_DIR := oopt-tai
-endif
+TAI_DOCKER_CMD ?= bash
+TAI_DOCKER_RUN_OPTION ?= -it --rm
 
-ifndef TAI_LIB_DIR
-    TAI_LIB_DIR := $(TAI_DIR)/tools/lib
-endif
+.PHONY = all test cmd docker builder bash clean-all
 
-ifndef TAI_FRAMEWORK_DIR
-    TAI_FRAMEWORK_DIR := $(TAI_DIR)/tools/framework
-endif
-
-ifndef TAI_META_LIBRARY
-    TAI_META_LIBRARY := $(TAI_DIR)/meta/libmetatai.so
-endif
-
-ifndef TAI_DOCKER_CMD
-    TAI_DOCKER_CMD := bash
-endif
-
-ifndef TAI_MUX_BUILDDIR
-    TAI_MUX_BUILDDIR := build
-endif
-
-ifndef TAI_DOCKER_RUN_OPTION
-    TAI_DOCKER_RUN_OPTION := -it --rm
-endif
-
-CFLAGS := -std=c++17 -g3 -shared -fPIC -DTAI_EXPOSE_PLATFORM -fno-gnu-unique
-
-INCLUDES := -I $(TAI_DIR)/inc -I $(TAI_DIR)/meta -I $(TAI_LIB_DIR) -I $(TAI_FRAMEWORK_DIR) -include mux.hpp
-
-BUILDDIR := $(TAI_MUX_BUILDDIR)
-SOURCES := $(wildcard *.cpp $(TAI_LIB_DIR)/*.cpp $(TAI_FRAMEWORK_DIR)/*.cpp)
-HEADERS := $(wildcard *.hpp $(TAI_LIB_DIR)/*.hpp $(TAI_FRAMEWORK_DIR)/*.hpp)
-OBJECTS := $(addprefix $(BUILDDIR)/,$(SOURCES:%.cpp=%.o))
-DEPS := $(addprefix $(BUILDDIR)/,$(SOURCES:%.cpp=%.d))
-
-.PHONY = all meta test cmd docker builder bash clean clean-all
-
-all: $(PROG)
-
-$(PROG): $(TAI_META_LIBRARY) $(OBJECTS) $(HEADERS)
-	$(CXX) $(CFLAGS) $(INCLUDES) -shared $(OBJECTS) -o $@ -ldl -lpthread -L $(dir $(TAI_META_LIBRARY)) -lmetatai
-
-$(TAI_META_LIBRARY): $(wildcard custom_attrs/*)
-	TAI_META_CUSTOM_FILES="$(abspath $(wildcard custom_attrs/*))" $(MAKE) -C $(@D)
-
-meta: $(TAI_META_LIBRARY)
-
-$(BUILDDIR)/%.o: %.cpp Makefile
-	mkdir -p $(@D)
-	$(CXX) $(CFLAGS) $(INCLUDES) -c $< -MMD -MP -MF $(BUILDDIR)/$*.d -o $@
-
--include $(DEPS)
+include $(TAI_DIR)/tools/framework/make/lib.mk
 
 test:
 	$(MAKE) -C tests
@@ -71,11 +26,8 @@ builder:
 bash:
 	$(MAKE) cmd
 
-ci: builder
-	TAI_DOCKER_RUN_OPTION='--rm' TAI_DOCKER_CMD='make test' $(MAKE) cmd
-
-clean:
-	$(RM) -r $(BUILDDIR) $(TARGET)
+ci: clean-all builder
+	TAI_DOCKER_RUN_OPTION='-t --rm' TAI_DOCKER_CMD='make test' $(MAKE) cmd
 
 clean-all: clean
-	$(MAKE) -C $(TAI_DIR) clean
+	git clean -dfx oopt-tai

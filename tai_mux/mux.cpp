@@ -28,26 +28,15 @@ namespace tai::mux {
 
     Platform::Platform(const tai_service_method_table_t * services) : tai::framework::Platform(services) {
         auto pa = std::getenv(PLATFORM_ADAPTER.c_str());
-        std::string pa_name;
-        if ( pa == nullptr ) {
-            pa_name = DEFAULT_PLATFORM_ADAPTER;
-        } else {
+        std::string pa_name = DEFAULT_PLATFORM_ADAPTER;
+        if (pa) {
             pa_name = std::string(pa);
         }
-        tai_mux_platform_adapter_type_t pa_type;
-        if ( pa_name == "static" ) {
-            pa_type = TAI_MUX_PLATFORM_ADAPTER_TYPE_STATIC;
-        } else if ( pa_name == "exec" ) {
-            pa_type = TAI_MUX_PLATFORM_ADAPTER_TYPE_EXEC;
-        }
-        switch ( pa_type ) {
-        case TAI_MUX_PLATFORM_ADAPTER_TYPE_STATIC:
+        if (pa_name == "static") {
             m_pa = std::make_shared<StaticPlatformAdapter>(0, services);
-            break;
-        case TAI_MUX_PLATFORM_ADAPTER_TYPE_EXEC:
+        } else if (pa_name == "exec") {
             m_pa = std::make_shared<ExecPlatformAdapter>(0, services);
-            break;
-        default:
+        } else {
             TAI_ERROR("unsupported platform_adapter: %s", pa_name.c_str());
             throw Exception(TAI_STATUS_NOT_SUPPORTED);
         }
@@ -164,8 +153,9 @@ namespace tai::mux {
                 auto m = std::dynamic_pointer_cast<HostIf>(it->second);
                 return m->module_id();
             }
+        default:
+            return TAI_NULL_OBJECT_ID;
         }
-        return TAI_NULL_OBJECT_ID;
     }
 
     tai_status_t Platform::set_log(tai_api_t api, tai_log_level_t level, tai_log_fn log_fn) {
@@ -306,7 +296,7 @@ namespace tai::mux {
             .set_getter(&mux::attribute_getter),
     };
 
-    NetIf::NetIf(S_Module module, uint32_t count, const tai_attribute_t *list, S_PlatformAdapter platform) : m_module(module), Object(platform) {
+    NetIf::NetIf(S_Module module, uint32_t count, const tai_attribute_t *list, S_PlatformAdapter platform) : Object(platform), m_module(module) {
         m_adapter = module->adapter();
         if ( m_adapter == nullptr ) {
             throw Exception(TAI_STATUS_FAILURE);
@@ -326,7 +316,7 @@ namespace tai::mux {
             .set_getter(&mux::attribute_getter),
     };
 
-    HostIf::HostIf(S_Module module, uint32_t count, const tai_attribute_t *list, S_PlatformAdapter platform) : m_module(module), Object(platform) {
+    HostIf::HostIf(S_Module module, uint32_t count, const tai_attribute_t *list, S_PlatformAdapter platform) : Object(platform), m_module(module) {
         m_adapter = module->adapter();
         if ( m_adapter == nullptr ) {
             throw Exception(TAI_STATUS_FAILURE);

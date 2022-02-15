@@ -1,4 +1,7 @@
 *.so
+*.o
 test/test
 build
 __pycache__
+taimetadata.c
+taimetadata.h

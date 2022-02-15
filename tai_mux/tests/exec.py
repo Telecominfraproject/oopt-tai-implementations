@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 import sys
 import time
@@ -14,7 +14,7 @@ def main():
         print("\n".join(str(v) for v in range(1, 8)))
         return
 
-    time.sleep(.5)
+    time.sleep(0.5)
 
     print("libtai-a.so")
 
