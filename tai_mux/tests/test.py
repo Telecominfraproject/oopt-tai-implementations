@@ -36,7 +36,7 @@ class TestTAI(unittest.IsolatedAsyncioTestCase):
         self.d = threading.Thread(target=output_reader, args=(proc,))
         self.d.start()
         self.proc = proc
-        time.sleep(1)  # wait for the server to be ready
+        time.sleep(5)  # wait for the server to be ready
 
     def tearDown(self):
         if TAI_TEST_NO_LOCAL_TAISH_SERVER:
@@ -53,4 +53,4 @@ class TestTAI(unittest.IsolatedAsyncioTestCase):
         m = await cli.list()
         v = await asyncio.gather(*(cli.create_module(k) for k in m.keys()))
         await asyncio.gather(*(cli.remove(v.oid) for v in v))
-        cli.close()
+        await cli.close()

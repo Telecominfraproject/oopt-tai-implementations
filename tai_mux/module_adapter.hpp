@@ -52,8 +52,9 @@ namespace tai::mux {
                     return set_network_interface_attributes(oid, count, list);
                 case TAI_OBJECT_TYPE_HOSTIF:
                     return set_host_interface_attributes(oid, count, list);
+                default:
+                    return TAI_STATUS_NOT_SUPPORTED;
                 }
-                return TAI_STATUS_NOT_SUPPORTED;
             }
 
             tai_status_t get_attributes(tai_object_type_t type, tai_object_id_t oid, uint32_t count, tai_attribute_t *list) {
@@ -64,8 +65,9 @@ namespace tai::mux {
                     return get_network_interface_attributes(oid, count, list);
                 case TAI_OBJECT_TYPE_HOSTIF:
                     return get_host_interface_attributes(oid, count, list);
+                default:
+                    return TAI_STATUS_NOT_SUPPORTED;
                 }
-                return TAI_STATUS_NOT_SUPPORTED;
             }
 
             tai_status_t get_capabilities(tai_object_type_t type, tai_object_id_t oid, uint32_t count, tai_attribute_capability_t *list) {
@@ -85,8 +87,9 @@ namespace tai::mux {
                         return TAI_STATUS_NOT_SUPPORTED;
                     }
                     return m_hostif_api->get_host_interface_capabilities(oid, count, list);
+                default:
+                    return TAI_STATUS_NOT_SUPPORTED;
                 }
-                return TAI_STATUS_NOT_SUPPORTED;
             }
 
             tai_status_t create_module(

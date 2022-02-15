@@ -58,11 +58,12 @@ namespace tai::mux {
     template<tai_object_type_t T>
     class Object : public tai::framework::Object<T> {
         public:
-            Object(S_PlatformAdapter pa) : m_context{pa}, tai::framework::Object<T>(0, nullptr, std::make_shared<tai::framework::FSM>(),
+            Object(S_PlatformAdapter pa) : tai::framework::Object<T>(0, nullptr, std::make_shared<tai::framework::FSM>(),
                     reinterpret_cast<void*>(&m_context),
                     std::bind(&Object::default_setter, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, std::placeholders::_5),
                     std::bind(&Object::default_getter, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4),
-                    std::bind(&Object::default_cap_getter, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4)) {}
+                    std::bind(&Object::default_cap_getter, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4)),
+                    m_context{pa} {}
 
             tai_object_id_t id() const {
                 return m_context.oid;
